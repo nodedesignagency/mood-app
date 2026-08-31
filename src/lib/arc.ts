@@ -21,8 +21,23 @@ import { LAST_MOOD } from '../theme/moods';
  *
  * The y term keeps the quadratic and simplifies to a tidy parabola:
  *
- *   y(t) = yEnds + 4·SAG·t(1-t)      → y(0)=y(1)=yEnds, y(0.5)=yEnds+SAG
+ *   y(t) = yEnds ± 4·BEND·t(1-t)     → y(0)=y(1)=yEnds, y(0.5)=yEnds±BEND
+ *
+ * The sign is the `bend` argument threaded through everything below:
+ *
+ *   bend = HILL   the middle rises above the ends — an arch, like a floating
+ *                 tab bar. The ends therefore have to sit lower in the box.
+ *   bend = VALLEY the middle sags below the ends — a smile.
+ *
+ * Both shapes occupy exactly the same box height, so a screen can swap between
+ * them without re-laying anything out.
  */
+
+/** The middle of the curve rises above its ends. */
+export const HILL = -1;
+/** The middle of the curve sags below its ends. */
+export const VALLEY = 1;
+export type ArcBend = typeof HILL | typeof VALLEY;
 
 /**
  * Horizontal breathing room between the arc box and the ends of the curve.
@@ -35,8 +50,8 @@ import { LAST_MOOD } from '../theme/moods';
 export const ARC_INSET = 58;
 /** Thickness of the blob the curve is stroked into. */
 export const TRACK_HEIGHT = 88;
-/** How far the middle of the curve dips below its ends. */
-export const ARC_SAG = 30;
+/** How far the middle of the curve departs from its ends, in either direction. */
+export const ARC_BEND = 30;
 /** Vertical padding so the knob can grow past the blob without clipping. */
 export const ARC_PAD_V = 16;
 
@@ -45,10 +60,21 @@ export const DOT_SIZE = 13;
 /** Emotion-icon stops are larger than colour chips - they carry detail. */
 export const FACE_SIZE = 34;
 
-/** Total height of the arc box. */
-export const ARC_HEIGHT = ARC_PAD_V * 2 + TRACK_HEIGHT + ARC_SAG;
-/** Height of the curve's endpoints within that box. */
-export const ARC_Y_ENDS = ARC_PAD_V + TRACK_HEIGHT / 2;
+/** Total height of the arc box. Identical for both bends. */
+export const ARC_HEIGHT = ARC_PAD_V * 2 + TRACK_HEIGHT + ARC_BEND;
+
+/**
+ * Height of the curve's endpoints.
+ *
+ * An arch pushes its middle up, so its ends have to start lower to keep the
+ * blob inside the box; a valley is the mirror image.
+ */
+export function arcYEnds(bend: ArcBend): number {
+  'worklet';
+  return bend === HILL
+    ? ARC_PAD_V + ARC_BEND + TRACK_HEIGHT / 2
+    : ARC_PAD_V + TRACK_HEIGHT / 2;
+}
 
 /** Left edge of the curve. */
 export function arcStartX(): number {
@@ -69,9 +95,9 @@ export function arcX(t: number, width: number): number {
 }
 
 /** Curve position `t` (0…1) → y, in arc-box coordinates. */
-export function arcY(t: number): number {
+export function arcY(t: number, bend: ArcBend): number {
   'worklet';
-  return ARC_Y_ENDS + 4 * ARC_SAG * t * (1 - t);
+  return arcYEnds(bend) + bend * 4 * ARC_BEND * t * (1 - t);
 }
 
 /** Finger x → curve position `t`, clamped to the ends of the track. */
@@ -95,9 +121,12 @@ export function moodToT(index: number): number {
 }
 
 /** SVG path for the curve. Stroking it thickly *is* the track blob. */
-export function arcPath(width: number): string {
+export function arcPath(width: number, bend: ArcBend): string {
   const x0 = ARC_INSET;
   const x1 = width - ARC_INSET;
-  const ctrlY = ARC_Y_ENDS + ARC_SAG * 2;
-  return `M ${x0} ${ARC_Y_ENDS} Q ${(x0 + x1) / 2} ${ctrlY} ${x1} ${ARC_Y_ENDS}`;
+  const yEnds = arcYEnds(bend);
+  // A quadratic reaches only half way to its control point, so the control
+  // sits at twice the bend to land the midpoint exactly on it.
+  const ctrlY = yEnds + bend * ARC_BEND * 2;
+  return `M ${x0} ${yEnds} Q ${(x0 + x1) / 2} ${ctrlY} ${x1} ${yEnds}`;
 }

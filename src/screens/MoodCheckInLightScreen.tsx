@@ -14,9 +14,10 @@ import Animated, {
 import { Mascot } from '../components/Mascot';
 import { MoodArc, type ArcSkin } from '../components/MoodArc';
 import { MoodBackdrop, MoodBloom } from '../components/MoodBackdrop';
+import { HILL } from '../lib/arc';
 import { confirmHaptic, settleHaptic, tickHaptic } from '../lib/haptics';
 import { LIGHT_INK, LIGHT_PALETTE, LIGHT_PAPER } from '../theme/moodsLight';
-import { FONTS, SPACING } from '../theme/tokens';
+import { SPACING, rounded } from '../theme/tokens';
 
 /** Start in the middle so the arc reads as a scale, not a default answer. */
 const INITIAL_MOOD = 2;
@@ -115,6 +116,7 @@ export function MoodCheckInLightScreen() {
             width={width}
             palette={LIGHT_PALETTE}
             skin={LIGHT_SKIN}
+            bend={HILL}
             onCross={handleCross}
             onSettle={handleSettle}
           />
@@ -212,7 +214,7 @@ const styles = StyleSheet.create({
     marginBottom: SPACING.lg,
   },
   date: {
-    fontFamily: FONTS.sansMedium,
+    ...rounded('600'),
     fontSize: 12,
     letterSpacing: 1.6,
     textTransform: 'uppercase',
@@ -228,7 +230,7 @@ const styles = StyleSheet.create({
   },
   closeGlyph: { fontSize: 13, color: LIGHT_INK, lineHeight: 16 },
   headline: {
-    fontFamily: FONTS.sansBold,
+    ...rounded('800'),
     fontSize: 30,
     lineHeight: 36,
     letterSpacing: -0.6,
@@ -238,7 +240,7 @@ const styles = StyleSheet.create({
   readout: { alignItems: 'center', marginBottom: 16 },
   labelSlot: { height: 52, justifyContent: 'center' },
   label: {
-    fontFamily: FONTS.sansBold,
+    ...rounded('800'),
     fontSize: 44,
     lineHeight: 52,
     letterSpacing: -1,
@@ -246,7 +248,7 @@ const styles = StyleSheet.create({
   },
   captionSlot: { height: 24, justifyContent: 'center' },
   caption: {
-    fontFamily: FONTS.sans,
+    ...rounded('400'),
     fontSize: 15,
     lineHeight: 22,
     color: MUTED,
@@ -254,7 +256,7 @@ const styles = StyleSheet.create({
   },
   controls: { alignItems: 'center', marginHorizontal: -SPACING.gutter },
   hint: {
-    fontFamily: FONTS.sansMedium,
+    ...rounded('600'),
     fontSize: 11,
     letterSpacing: 1.8,
     textTransform: 'uppercase',
@@ -270,7 +272,7 @@ const styles = StyleSheet.create({
     backgroundColor: LIGHT_INK,
   },
   ctaLabel: {
-    fontFamily: FONTS.sansMedium,
+    ...rounded('700'),
     fontSize: 16,
     letterSpacing: 0.2,
     color: '#FFFFFF',

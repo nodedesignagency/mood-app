@@ -30,8 +30,10 @@ crosses back to JS, and only when the nearest mood actually changes.
 
 ## Why the track is a quadratic Bézier
 
-The curve is symmetric: it starts and ends at the same height and sags in the
-middle. Because the control point sits exactly halfway between the endpoints
+The curve is symmetric: it starts and ends at the same height and bends in the
+middle. Which way it bends is the `bend` argument — `HILL` for v2's arch (the
+middle rides above the ends, like a floating tab bar) or `VALLEY` for v1's
+smile. Both shapes occupy the same box height, so swapping needs no relayout. Because the control point sits exactly halfway between the endpoints
 horizontally, the x term collapses to a straight line — `x(t) = x0 + (x1-x0)·t`
 — while y stays curved. So finger-x maps to track position with one divide: no
 arc-length table, no Newton iteration per frame. Dots spaced evenly in `t` are

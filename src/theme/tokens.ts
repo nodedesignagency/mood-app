@@ -1,3 +1,5 @@
+import { Platform } from 'react-native';
+
 /** Shared type ramp, spacing and font family names. */
 
 export const FONTS = {
@@ -33,3 +35,31 @@ export const CAPS = {
   letterSpacing: 2.2,
   textTransform: 'uppercase',
 } as const;
+
+/**
+ * SF Pro Rounded.
+ *
+ * On iOS this is the real thing, for free: React Native maps the family name
+ * `ui-rounded` to `UIFontDescriptorSystemDesignRounded`, so the system draws
+ * SF Pro Rounded at whatever `fontWeight` is asked for. Nothing to bundle and
+ * no licence question — see RCTFontUtils.mm in react-native.
+ *
+ * Android and web have no SF, so they fall back to Nunito, the closest freely
+ * licensed rounded face. Weight there is carried by the family name, because
+ * the fallback is a set of static files rather than one variable font.
+ */
+const NUNITO: Record<RoundedWeight, string> = {
+  '400': 'Nunito_400Regular',
+  '600': 'Nunito_600SemiBold',
+  '700': 'Nunito_700Bold',
+  '800': 'Nunito_800ExtraBold',
+};
+
+export type RoundedWeight = '400' | '600' | '700' | '800';
+
+export function rounded(weight: RoundedWeight) {
+  return Platform.select({
+    ios: { fontFamily: 'ui-rounded', fontWeight: weight },
+    default: { fontFamily: NUNITO[weight] },
+  }) as { fontFamily: string; fontWeight?: RoundedWeight };
+}

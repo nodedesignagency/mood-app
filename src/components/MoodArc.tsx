@@ -21,11 +21,13 @@ import {
   FACE_SIZE,
   KNOB_SIZE,
   TRACK_HEIGHT,
+  VALLEY,
   arcPath,
   arcX,
   arcY,
   tToMood,
   xToT,
+  type ArcBend,
 } from '../lib/arc';
 import { DARK_PALETTE } from '../theme/moods';
 import type { MoodPalette } from '../theme/palette';
@@ -95,6 +97,8 @@ type Props = {
   palette?: MoodPalette;
   /** Paint. Defaults to the dark v1 skin. */
   skin?: ArcSkin;
+  /** Which way the track curves. Defaults to v1's valley. */
+  bend?: ArcBend;
 };
 
 export function MoodArc({
@@ -105,6 +109,7 @@ export function MoodArc({
   onSettle,
   palette = DARK_PALETTE,
   skin = DARK_SKIN,
+  bend = VALLEY,
 }: Props) {
   const { stops: MOOD_STOPS, dot: DOT_COLORS, moods: MOODS, last: LAST_MOOD } = palette;
   /** Raw finger position, in mood units. */
@@ -174,7 +179,7 @@ export function MoodArc({
     return {
       transform: [
         { translateX: arcX(t, width) - KNOB_SIZE / 2 },
-        { translateY: arcY(t) - KNOB_SIZE / 2 },
+        { translateY: arcY(t, bend) - KNOB_SIZE / 2 },
         { scale: 1 + pressed.value * 0.08 },
       ],
     };
@@ -197,7 +202,7 @@ export function MoodArc({
     transform: [{ scale: 1 + pressed.value * 0.26 }],
   }));
 
-  const d = arcPath(width);
+  const d = arcPath(width, bend);
 
   return (
     <View style={{ width }}>
@@ -248,6 +253,7 @@ export function MoodArc({
               color={skin.stops === 'faces' ? skin.faceInk : mood.dot}
               kind={skin.stops}
               last={LAST_MOOD}
+              bend={bend}
             />
           ))}
 
@@ -289,6 +295,7 @@ function Stop({
   color,
   kind,
   last,
+  bend,
 }: {
   index: number;
   progress: SharedValue<number>;
@@ -296,11 +303,12 @@ function Stop({
   color: string;
   kind: 'dots' | 'faces';
   last: number;
+  bend: ArcBend;
 }) {
   const size = kind === 'faces' ? FACE_SIZE : DOT_SIZE;
   const t = index / last;
   const left = arcX(t, width) - size / 2;
-  const top = arcY(t) - size / 2;
+  const top = arcY(t, bend) - size / 2;
 
   const style = useAnimatedStyle(() => {
     const distance = Math.abs(progress.value - index);
