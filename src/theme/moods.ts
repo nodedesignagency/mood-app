@@ -1,28 +1,14 @@
-/**
- * The five moods the selector moves between.
- *
- * Order matters: index 0 is the far-left end of the arc, index 4 the far-right.
- * The selector exposes a *continuous* position (0 → 4) rather than a discrete
- * choice, so every colour below doubles as a keyframe that gets interpolated
- * while the thumb is travelling between two moods.
- */
-export type Mood = {
-  /** Stable id, safe to persist. */
-  key: string;
-  /** Display name, shown as the hero word. */
-  label: string;
-  /** One-line reading of the mood, shown under the hero word. */
-  caption: string;
-  /** Saturated colour for the track dot, mascot body and CTA. */
-  dot: string;
-  /** Colour of the soft bloom behind the mascot. */
-  glow: string;
-  /** Deep, near-black page background. */
-  bg: string;
-  /** Light tint used for text so it stays readable on `bg`. */
-  ink: string;
-};
+import { buildPalette, type Mood } from './palette';
 
+export type { Mood };
+
+/**
+ * Dark scale — the v1 direction.
+ *
+ * Order matters: index 0 is the far-left end of the arc, index 4 the far
+ * right. The selector exposes a *continuous* position rather than a discrete
+ * choice, so every colour doubles as an interpolation keyframe.
+ */
 export const MOODS: readonly Mood[] = [
   {
     key: 'awful',
@@ -71,15 +57,14 @@ export const MOODS: readonly Mood[] = [
   },
 ] as const;
 
-export const MOOD_COUNT = MOODS.length;
-export const LAST_MOOD = MOOD_COUNT - 1;
+export const DARK_PALETTE = buildPalette(MOODS);
 
-/**
- * Interpolation keyframes. `interpolateColor` needs plain arrays available to
- * the UI thread, so they are built once here instead of inside a worklet.
- */
-export const MOOD_STOPS: number[] = MOODS.map((_, i) => i);
-export const DOT_COLORS: string[] = MOODS.map((m) => m.dot);
-export const GLOW_COLORS: string[] = MOODS.map((m) => m.glow);
-export const BG_COLORS: string[] = MOODS.map((m) => m.bg);
-export const INK_COLORS: string[] = MOODS.map((m) => m.ink);
+export const MOOD_COUNT = MOODS.length;
+export const LAST_MOOD = DARK_PALETTE.last;
+
+/** Kept as named exports because `lib/arc.ts` and v1 read them directly. */
+export const MOOD_STOPS = DARK_PALETTE.stops;
+export const DOT_COLORS = DARK_PALETTE.dot;
+export const GLOW_COLORS = DARK_PALETTE.glow;
+export const BG_COLORS = DARK_PALETTE.bg;
+export const INK_COLORS = DARK_PALETTE.ink;

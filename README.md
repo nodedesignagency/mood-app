@@ -2,7 +2,18 @@
 
 A daily mood check-in, built with Expo + React Native.
 
-This repo currently contains one screen: the **mood selector**.
+This repo contains the **mood selector** screen in two design directions. The
+app opens on v2; the `V1 / V2` pill at the top switches between them on device
+(a temporary review affordance — delete it once a direction is picked).
+
+- **v1 — dark** (`MoodCheckInScreen`): near-black, mood-tinted background,
+  serif hero, colour-chip stops.
+- **v2 — light** (`MoodCheckInLightScreen`): paper background washed with a
+  pale tint of the mood, chunky sans, a floating white track, and **emotion
+  faces instead of colour chips** at each stop.
+
+Both share one gesture, one curve and one mascot — only paint differs, via a
+`MoodPalette` and an `ArcSkin`.
 
 ## The interaction
 
@@ -57,5 +68,5 @@ npm install
 npx expo start          # then scan the QR with Expo Go
 ```
 
-Haptics need a physical device. `npx expo start --web` renders but has no
-haptics and mouse-drag feel differs from thumb-drag.
+`npx expo start --web` renders, but has no haptics and mouse-drag feel differs
+from thumb-drag. Judge the springs on a phone.

@@ -18,17 +18,62 @@ import {
   ARC_HEIGHT,
   ARC_INSET,
   DOT_SIZE,
+  FACE_SIZE,
   KNOB_SIZE,
   TRACK_HEIGHT,
   arcPath,
   arcX,
   arcY,
-  moodToT,
   tToMood,
   xToT,
 } from '../lib/arc';
-import { DOT_COLORS, LAST_MOOD, MOODS, MOOD_STOPS } from '../theme/moods';
+import { DARK_PALETTE } from '../theme/moods';
+import type { MoodPalette } from '../theme/palette';
 import { CAPS, NEUTRAL } from '../theme/tokens';
+import { MoodFace, MoodFaceLive } from './MoodFace';
+
+/**
+ * Everything that differs between the dark v1 and the light v2. The gesture,
+ * the geometry and the snapping behaviour are identical, so only paint is
+ * parameterised.
+ */
+export type ArcSkin = {
+  /** Fill of the track blob. */
+  track: string;
+  /** Hairline rim drawn just outside the blob. */
+  rim: string;
+  /** How far the rim extends past the blob. A wide soft rim fakes a shadow. */
+  rimWidth: number;
+  /** Dotted line threading the stops together. */
+  guide: string;
+  /** Fill of the knob disc. */
+  knobFace: string;
+  knobBorder: string;
+  /** Tint the whole disc with the mood colour instead of an inner chip. */
+  tintKnob: boolean;
+  /** Ink used for the emotion faces, when `stops` is 'faces'. */
+  faceInk: string;
+  /** Coloured dots (v1) or emotion icons (v2). */
+  stops: 'dots' | 'faces';
+  /** The Awful / Great captions above the ends. Redundant once faces show. */
+  endCaps: boolean;
+  /** Drop shadow under the blob. Reads on light backgrounds, not on dark. */
+  raised: boolean;
+};
+
+export const DARK_SKIN: ArcSkin = {
+  track: 'rgba(255,255,255,0.07)',
+  rim: 'rgba(255,255,255,0.14)',
+  rimWidth: 2,
+  guide: 'rgba(255,255,255,0.20)',
+  knobFace: '#1B1C21',
+  knobBorder: 'rgba(255,255,255,0.22)',
+  tintKnob: false,
+  faceInk: '#1C1A16',
+  stops: 'dots',
+  endCaps: true,
+  raised: false,
+};
 
 /** Quick, eager spring that carries the knob to a finger placed away from it. */
 const GRAB_SPRING = { damping: 20, stiffness: 260, mass: 0.7 } as const;
@@ -46,9 +91,22 @@ type Props = {
   onCross: (index: number) => void;
   /** Fires once the knob has snapped after release. */
   onSettle: (index: number) => void;
+  /** Mood scale to render. Defaults to the dark v1 scale. */
+  palette?: MoodPalette;
+  /** Paint. Defaults to the dark v1 skin. */
+  skin?: ArcSkin;
 };
 
-export function MoodArc({ progress, pressed, width, onCross, onSettle }: Props) {
+export function MoodArc({
+  progress,
+  pressed,
+  width,
+  onCross,
+  onSettle,
+  palette = DARK_PALETTE,
+  skin = DARK_SKIN,
+}: Props) {
+  const { stops: MOOD_STOPS, dot: DOT_COLORS, moods: MOODS, last: LAST_MOOD } = palette;
   /** Raw finger position, in mood units. */
   const finger = useSharedValue(0);
   /**
@@ -127,6 +185,12 @@ export function MoodArc({ progress, pressed, width, onCross, onSettle }: Props) 
     transform: [{ scale: 1 + pressed.value * 0.18 }],
   }));
 
+  const knobDisc = useAnimatedStyle(() => ({
+    backgroundColor: skin.tintKnob
+      ? interpolateColor(progress.value, MOOD_STOPS, DOT_COLORS)
+      : skin.knobFace,
+  }));
+
   const knobRing = useAnimatedStyle(() => ({
     borderColor: interpolateColor(progress.value, MOOD_STOPS, DOT_COLORS),
     opacity: pressed.value * 0.55,
@@ -137,10 +201,12 @@ export function MoodArc({ progress, pressed, width, onCross, onSettle }: Props) 
 
   return (
     <View style={{ width }}>
-      <View style={styles.caps}>
-        <Text style={styles.capLabel}>{MOODS[0].label}</Text>
-        <Text style={styles.capLabel}>{MOODS[LAST_MOOD].label}</Text>
-      </View>
+      {skin.endCaps ? (
+        <View style={styles.caps}>
+          <Text style={styles.capLabel}>{MOODS[0].label}</Text>
+          <Text style={styles.capLabel}>{MOODS[LAST_MOOD].label}</Text>
+        </View>
+      ) : null}
 
       <GestureDetector gesture={pan}>
         <View style={[styles.stage, { width, height: ARC_HEIGHT }]}>
@@ -150,14 +216,14 @@ export function MoodArc({ progress, pressed, width, onCross, onSettle }: Props) 
                 underneath leaves a hairline rim. */}
             <Path
               d={d}
-              stroke="rgba(255,255,255,0.14)"
-              strokeWidth={TRACK_HEIGHT + 2}
+              stroke={skin.rim}
+              strokeWidth={TRACK_HEIGHT + skin.rimWidth}
               strokeLinecap="round"
               fill="none"
             />
             <Path
               d={d}
-              stroke="rgba(255,255,255,0.07)"
+              stroke={skin.track}
               strokeWidth={TRACK_HEIGHT}
               strokeLinecap="round"
               fill="none"
@@ -165,7 +231,7 @@ export function MoodArc({ progress, pressed, width, onCross, onSettle }: Props) 
             {/* Dotted guide threading the five stops together. */}
             <Path
               d={d}
-              stroke="rgba(255,255,255,0.20)"
+              stroke={skin.guide}
               strokeWidth={2}
               strokeLinecap="round"
               strokeDasharray="0.1 8"
@@ -174,14 +240,35 @@ export function MoodArc({ progress, pressed, width, onCross, onSettle }: Props) 
           </Svg>
 
           {MOODS.map((mood, i) => (
-            <Dot key={mood.key} index={i} progress={progress} width={width} color={mood.dot} />
+            <Stop
+              key={mood.key}
+              index={i}
+              progress={progress}
+              width={width}
+              color={skin.stops === 'faces' ? skin.faceInk : mood.dot}
+              kind={skin.stops}
+              last={LAST_MOOD}
+            />
           ))}
 
           <Animated.View style={[styles.knob, knob]} pointerEvents="none">
             <Animated.View style={[styles.knobRing, knobRing]} />
-            <View style={styles.knobFace}>
-              <Animated.View style={[styles.knobCore, knobCore]} />
-            </View>
+            <Animated.View
+              style={[
+                styles.knobFace,
+                { borderColor: skin.knobBorder },
+                skin.raised && styles.knobRaised,
+                knobDisc,
+              ]}
+            >
+              {skin.stops === 'faces' ? (
+                // The knob wears the expression it is currently between, so the
+                // face morphs under the thumb rather than cutting between five.
+                <MoodFaceLive progress={progress} size={44} color={skin.faceInk} />
+              ) : (
+                <Animated.View style={[styles.knobCore, knobCore]} />
+              )}
+            </Animated.View>
           </Animated.View>
         </View>
       </GestureDetector>
@@ -190,23 +277,30 @@ export function MoodArc({ progress, pressed, width, onCross, onSettle }: Props) 
 }
 
 /**
- * One stop on the track. It fades and shrinks as the knob arrives so the knob
- * reads as picking the dot up rather than covering it.
+ * One stop on the track: a colour chip (v1) or an emotion face (v2).
+ *
+ * It fades and shrinks as the knob arrives, so the knob reads as picking the
+ * stop up rather than parking on top of it.
  */
-function Dot({
+function Stop({
   index,
   progress,
   width,
   color,
+  kind,
+  last,
 }: {
   index: number;
   progress: SharedValue<number>;
   width: number;
   color: string;
+  kind: 'dots' | 'faces';
+  last: number;
 }) {
-  const t = moodToT(index);
-  const left = arcX(t, width) - DOT_SIZE / 2;
-  const top = arcY(t) - DOT_SIZE / 2;
+  const size = kind === 'faces' ? FACE_SIZE : DOT_SIZE;
+  const t = index / last;
+  const left = arcX(t, width) - size / 2;
+  const top = arcY(t) - size / 2;
 
   const style = useAnimatedStyle(() => {
     const distance = Math.abs(progress.value - index);
@@ -221,8 +315,14 @@ function Dot({
   return (
     <Animated.View
       pointerEvents="none"
-      style={[styles.dot, { left, top, backgroundColor: color }, style]}
-    />
+      style={[{ position: 'absolute', left, top }, style]}
+    >
+      {kind === 'faces' ? (
+        <MoodFace index={index} size={FACE_SIZE} color={color} />
+      ) : (
+        <View style={[styles.dot, { backgroundColor: color }]} />
+      )}
+    </Animated.View>
   );
 }
 
@@ -235,12 +335,7 @@ const styles = StyleSheet.create({
   },
   capLabel: { ...CAPS, color: NEUTRAL.dim },
   stage: { position: 'relative' },
-  dot: {
-    position: 'absolute',
-    width: DOT_SIZE,
-    height: DOT_SIZE,
-    borderRadius: DOT_SIZE / 2,
-  },
+  dot: { width: DOT_SIZE, height: DOT_SIZE, borderRadius: DOT_SIZE / 2 },
   knob: {
     position: 'absolute',
     top: 0,
@@ -261,9 +356,7 @@ const styles = StyleSheet.create({
     width: KNOB_SIZE,
     height: KNOB_SIZE,
     borderRadius: KNOB_SIZE / 2,
-    backgroundColor: '#1B1C21',
     borderWidth: 1.5,
-    borderColor: 'rgba(255,255,255,0.22)',
     alignItems: 'center',
     justifyContent: 'center',
     shadowColor: '#000',
@@ -271,6 +364,11 @@ const styles = StyleSheet.create({
     shadowRadius: 18,
     shadowOffset: { width: 0, height: 10 },
     elevation: 12,
+  },
+  knobRaised: {
+    shadowOpacity: 0.18,
+    shadowRadius: 14,
+    shadowOffset: { width: 0, height: 6 },
   },
   knobCore: { width: 34, height: 34, borderRadius: 17 },
 });

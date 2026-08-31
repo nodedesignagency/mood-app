@@ -13,7 +13,8 @@ import Animated, {
 } from 'react-native-reanimated';
 import Svg, { G, Path } from 'react-native-svg';
 
-import { DOT_COLORS, MOOD_STOPS } from '../theme/moods';
+import { DARK_PALETTE } from '../theme/moods';
+import type { MoodPalette } from '../theme/palette';
 
 const AnimatedPath = Animated.createAnimatedComponent(Path);
 
@@ -39,6 +40,19 @@ type Props = {
   progress: SharedValue<number>;
   /** 1 while a thumb is on the track. */
   pressed: SharedValue<number>;
+  /** Mood scale to take colour from. Defaults to the dark v1 scale. */
+  palette?: MoodPalette;
+  /**
+   * Sticker outline around the body and eyes. Reads on a light background and
+   * disappears into a dark one, so v1 leaves it off.
+   */
+  outline?: string;
+  /** Adds a highlight to each pupil — googly rather than dead-eyed. */
+  glint?: boolean;
+  /** Contact-shadow strength. Paper needs far less of it than near-black does. */
+  shadowStrength?: number;
+  /** Uniform scale, so a screen can size the character without re-tuning parts. */
+  scale?: number;
 };
 
 /**
@@ -49,8 +63,18 @@ type Props = {
  * moods instead of cutting between five drawings. When the real illustrated
  * mascot arrives it can keep this prop contract and reuse the same curves.
  */
-export function Mascot({ progress, pressed }: Props) {
+export function Mascot({
+  progress,
+  pressed,
+  palette = DARK_PALETTE,
+  outline,
+  glint = false,
+  shadowStrength = 1,
+  scale = 1,
+}: Props) {
   const idle = useIdle();
+  const MOOD_STOPS = palette.stops;
+  const DOT_COLORS = palette.dot;
 
   const body = useAnimatedStyle(() => {
     const p = progress.value;
@@ -109,28 +133,44 @@ export function Mascot({ progress, pressed }: Props) {
   });
 
   return (
-    <View style={styles.stage}>
-      <Shadow progress={progress} idle={idle} style={styles.shadowWide} base={0.14} />
-      <Shadow progress={progress} idle={idle} style={styles.shadowCore} base={0.2} />
+    <View style={[styles.stage, scale !== 1 && { transform: [{ scale }] }]}>
+      <Shadow progress={progress} idle={idle} style={styles.shadowWide} base={0.14 * shadowStrength} />
+      <Shadow progress={progress} idle={idle} style={styles.shadowCore} base={0.2 * shadowStrength} />
 
-      <Animated.View style={[styles.body, body]}>
+      <Animated.View
+        style={[
+          styles.body,
+          outline ? { borderWidth: 3, borderColor: outline } : null,
+          body,
+        ]}
+      >
         {/* Sprout on the crown — droops when low, perks up when great. */}
         <Animated.View style={[styles.sprout, sprout]}>
-          <Animated.View style={[styles.stalk, tint]} />
-          <Animated.View style={[styles.bulb, tint]} />
+          <Animated.View style={[styles.stalk, outline ? { backgroundColor: outline } : tint]} />
+          <Animated.View
+            style={[styles.bulb, tint, outline ? { borderWidth: 2.5, borderColor: outline } : null]}
+          />
         </Animated.View>
 
-        <Arm progress={progress} idle={idle} side={-1} />
-        <Arm progress={progress} idle={idle} side={1} />
+        <Arm progress={progress} idle={idle} side={-1} palette={palette} ink={outline} />
+        <Arm progress={progress} idle={idle} side={1} palette={palette} ink={outline} />
 
         <Brow progress={progress} side={1} />
         <Brow progress={progress} side={-1} />
 
-        <Animated.View style={[styles.eye, styles.eyeLeft, eyes]}>
-          <Animated.View style={[styles.pupil, pupils]} />
+        <Animated.View
+          style={[styles.eye, styles.eyeLeft, outline ? styles.eyeOutlined : null, eyes]}
+        >
+          <Animated.View style={[styles.pupil, pupils]}>
+            {glint ? <View style={styles.glint} /> : null}
+          </Animated.View>
         </Animated.View>
-        <Animated.View style={[styles.eye, styles.eyeRight, eyes]}>
-          <Animated.View style={[styles.pupil, pupils]} />
+        <Animated.View
+          style={[styles.eye, styles.eyeRight, outline ? styles.eyeOutlined : null, eyes]}
+        >
+          <Animated.View style={[styles.pupil, pupils]}>
+            {glint ? <View style={styles.glint} /> : null}
+          </Animated.View>
         </Animated.View>
 
         <Animated.View style={[styles.blush, styles.blushLeft, blush]} />
@@ -204,15 +244,19 @@ function Arm({
   progress,
   idle,
   side,
+  palette,
+  ink,
 }: {
   progress: SharedValue<number>;
   idle: SharedValue<number>;
   side: 1 | -1;
+  palette: MoodPalette;
+  ink?: string;
 }) {
   const style = useAnimatedStyle(() => {
     const sway = interpolate(idle.value, [0, 1], [-5, 5]);
     return {
-      backgroundColor: interpolateColor(progress.value, MOOD_STOPS, DOT_COLORS),
+      backgroundColor: ink ?? interpolateColor(progress.value, palette.stops, palette.dot),
       transform: [
         { rotate: `${side * (interpolate(progress.value, [0, 2, 4], [12, 0, -48]) + sway)}deg` },
       ],
@@ -270,7 +314,7 @@ const styles = StyleSheet.create({
   bulb: { position: 'absolute', top: -9, width: 17, height: 17, borderRadius: 9 },
   arm: {
     position: 'absolute',
-    top: 78,
+    top: 88,
     width: 11,
     height: 38,
     borderRadius: 6,
@@ -300,7 +344,24 @@ const styles = StyleSheet.create({
   },
   eyeLeft: { left: 26 },
   eyeRight: { right: 26 },
-  pupil: { width: 15, height: 16, borderRadius: 8, backgroundColor: INK },
+  pupil: {
+    width: 15,
+    height: 16,
+    borderRadius: 8,
+    backgroundColor: INK,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  eyeOutlined: { borderWidth: 2.5, borderColor: INK },
+  glint: {
+    position: 'absolute',
+    top: 2,
+    right: 2,
+    width: 5,
+    height: 5,
+    borderRadius: 3,
+    backgroundColor: '#FFFFFF',
+  },
   blush: {
     position: 'absolute',
     top: 92,

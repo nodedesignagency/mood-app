@@ -27,10 +27,12 @@ import { LAST_MOOD } from '../theme/moods';
 /**
  * Horizontal breathing room between the arc box and the ends of the curve.
  *
- * Must clear half the track thickness plus half the knob, otherwise the blob's
- * rounded cap and the knob at either extreme get clipped by the SVG bounds.
+ * Must clear half the track thickness plus half the knob at its pressed scale,
+ * otherwise the blob's rounded cap, the knob, or its selection ring get clipped
+ * at either extreme. The blob still reaches within ~14pt of the screen edge,
+ * because its rounded cap extends half the track height past the curve's end.
  */
-export const ARC_INSET = 52;
+export const ARC_INSET = 58;
 /** Thickness of the blob the curve is stroked into. */
 export const TRACK_HEIGHT = 88;
 /** How far the middle of the curve dips below its ends. */
@@ -40,6 +42,8 @@ export const ARC_PAD_V = 16;
 
 export const KNOB_SIZE = 76;
 export const DOT_SIZE = 13;
+/** Emotion-icon stops are larger than colour chips - they carry detail. */
+export const FACE_SIZE = 34;
 
 /** Total height of the arc box. */
 export const ARC_HEIGHT = ARC_PAD_V * 2 + TRACK_HEIGHT + ARC_SAG;

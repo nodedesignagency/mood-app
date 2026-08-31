@@ -9,9 +9,10 @@ import Animated, {
 } from 'react-native-reanimated';
 import Svg, { Defs, RadialGradient, Rect, Stop } from 'react-native-svg';
 
-import { BG_COLORS, GLOW_COLORS, MOOD_STOPS } from '../theme/moods';
+import { DARK_PALETTE } from '../theme/moods';
+import type { MoodPalette } from '../theme/palette';
 
-type Props = { progress: SharedValue<number> };
+type Props = { progress: SharedValue<number>; palette?: MoodPalette };
 
 /**
  * Full-screen background that re-tints as the thumb travels.
@@ -19,16 +20,20 @@ type Props = { progress: SharedValue<number> };
  * Two layers: a deep base colour, and a static wash that darkens top and
  * bottom so the arc reads as sitting in shadow.
  */
-export function MoodBackdrop({ progress }: Props) {
+export function MoodBackdrop({
+  progress,
+  palette = DARK_PALETTE,
+  vignette = ['rgba(0,0,0,0.32)', 'rgba(0,0,0,0)', 'rgba(0,0,0,0.5)'],
+}: Props & { vignette?: readonly [string, string, string] }) {
   const base = useAnimatedStyle(() => ({
-    backgroundColor: interpolateColor(progress.value, MOOD_STOPS, BG_COLORS),
+    backgroundColor: interpolateColor(progress.value, palette.stops, palette.bg),
   }));
 
   return (
     <View style={StyleSheet.absoluteFill} pointerEvents="none">
       <Animated.View style={[StyleSheet.absoluteFill, base]} />
       <LinearGradient
-        colors={['rgba(0,0,0,0.32)', 'rgba(0,0,0,0)', 'rgba(0,0,0,0.5)']}
+        colors={vignette}
         locations={[0, 0.42, 1]}
         style={StyleSheet.absoluteFill}
       />
@@ -57,15 +62,15 @@ const FALLOFF: [string, number][] = [
  * Stacked concentric circles were the other option, but they band visibly at
  * these opacities.
  */
-export function MoodBloom({ progress }: Props) {
+export function MoodBloom({ progress, palette = DARK_PALETTE, strength = 1 }: Props & { strength?: number }) {
   const swell = useAnimatedStyle(() => ({
-    transform: [{ scale: interpolate(progress.value, [0, 4], [0.9, 1.1]) }],
+    transform: [{ scale: interpolate(progress.value, [0, palette.last], [0.9, 1.1]) }],
   }));
 
   return (
     <Animated.View style={[styles.bloom, swell]} pointerEvents="none">
-      {GLOW_COLORS.map((color, i) => (
-        <GlowLayer key={color} progress={progress} index={i} color={color} />
+      {palette.glow.map((color, i) => (
+        <GlowLayer key={color} progress={progress} index={i} color={color} strength={strength} />
       ))}
     </Animated.View>
   );
@@ -75,7 +80,8 @@ function GlowLayer({
   progress,
   index,
   color,
-}: Props & { index: number; color: string }) {
+  strength,
+}: Props & { index: number; color: string; strength: number }) {
   const style = useAnimatedStyle(() => ({
     // A tent: full strength at its own mood, zero once `progress` reaches
     // either neighbour. Only the two adjacent layers are ever non-zero, so the
@@ -96,7 +102,12 @@ function GlowLayer({
         <Defs>
           <RadialGradient id={id} cx="50%" cy="50%" r="50%">
             {FALLOFF.map(([offset, opacity]) => (
-              <Stop key={offset} offset={offset} stopColor={color} stopOpacity={opacity} />
+              <Stop
+                key={offset}
+                offset={offset}
+                stopColor={color}
+                stopOpacity={opacity * strength}
+              />
             ))}
           </RadialGradient>
         </Defs>
