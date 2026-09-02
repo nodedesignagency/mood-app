@@ -16,18 +16,18 @@ import Svg, { Path } from 'react-native-svg';
 import { LinearGradient } from 'expo-linear-gradient';
 
 import {
-  ARC_INSET,
   DOT_SIZE,
   FACE_SIZE,
   KNOB_SIZE,
-  TRACK_HEIGHT,
+  PRESS_SCALE,
   VALLEY_SHAPE,
-  arcHeight,
+  arcGeometry,
   arcPath,
   arcX,
   arcY,
-  tToMood,
-  xToT,
+  uToMood,
+  xToU,
+  type ArcGeometry,
   type ArcShape,
 } from '../lib/arc';
 import { DARK_PALETTE } from '../theme/moods';
@@ -124,9 +124,9 @@ export function MoodArc({
   shape = VALLEY_SHAPE,
 }: Props) {
   const { stops: MOOD_STOPS, dot: DOT_COLORS, moods: MOODS, last: LAST_MOOD } = palette;
-  const height = arcHeight(shape);
   const knobW = skin.knob.width;
   const knobH = skin.knob.height;
+  const geo = arcGeometry(shape, knobH, width);
   /** Raw finger position, in mood units. */
   const finger = useSharedValue(0);
   /**
@@ -171,7 +171,7 @@ export function MoodArc({
     .shouldCancelWhenOutside(false)
     .hitSlop({ top: 24, bottom: 44, left: 0, right: 0 })
     .onBegin((e) => {
-      const target = tToMood(xToT(e.x, width));
+      const target = uToMood(xToU(e.x, geo));
       finger.value = target;
       grabOffset.value = progress.value - target;
       dragging.value = true;
@@ -179,7 +179,7 @@ export function MoodArc({
       pressed.value = withTiming(1, { duration: 110 });
     })
     .onUpdate((e) => {
-      finger.value = tToMood(xToT(e.x, width));
+      finger.value = uToMood(xToU(e.x, geo));
     })
     .onFinalize(() => {
       dragging.value = false;
@@ -193,9 +193,9 @@ export function MoodArc({
     const t = progress.value / LAST_MOOD;
     return {
       transform: [
-        { translateX: arcX(t, width) - knobW / 2 },
-        { translateY: arcY(t, shape) - knobH / 2 },
-        { scale: 1 + pressed.value * 0.08 },
+        { translateX: arcX(t, geo) - knobW / 2 },
+        { translateY: arcY(t, geo) - knobH / 2 },
+        { scale: 1 + pressed.value * (PRESS_SCALE - 1) },
       ],
     };
   });
@@ -211,13 +211,15 @@ export function MoodArc({
       : skin.knobFace,
   }));
 
+  const chipSize = { width: knobW, height: knobH, borderRadius: skin.knob.radius };
+
   const knobRing = useAnimatedStyle(() => ({
     borderColor: interpolateColor(progress.value, MOOD_STOPS, DOT_COLORS),
     opacity: pressed.value * 0.55,
     transform: [{ scale: 1 + pressed.value * 0.26 }],
   }));
 
-  const d = arcPath(width, shape);
+  const d = arcPath(geo);
 
   return (
     <View style={{ width }}>
@@ -229,22 +231,22 @@ export function MoodArc({
       ) : null}
 
       <GestureDetector gesture={pan}>
-        <View style={[styles.stage, { width, height }]}>
-          <Svg width={width} height={height} pointerEvents="none">
+        <View style={[styles.stage, { width, height: geo.height }]}>
+          <Svg width={width} height={geo.height} pointerEvents="none">
             {/* Stroking the curve *is* the track: one path, rounded caps,
                 thickness = the blob's height. The slightly fatter pass
                 underneath leaves a hairline rim. */}
             <Path
               d={d}
               stroke={skin.rim}
-              strokeWidth={TRACK_HEIGHT + skin.rimWidth}
+              strokeWidth={geo.track + skin.rimWidth}
               strokeLinecap="round"
               fill="none"
             />
             <Path
               d={d}
               stroke={skin.track}
-              strokeWidth={TRACK_HEIGHT}
+              strokeWidth={geo.track}
               strokeLinecap="round"
               fill="none"
             />
@@ -264,52 +266,60 @@ export function MoodArc({
               key={mood.key}
               index={i}
               progress={progress}
-              width={width}
               color={skin.stops === 'faces' ? skin.faceInk : mood.dot}
               kind={skin.stops}
               last={LAST_MOOD}
-              shape={shape}
+              geo={geo}
             />
           ))}
 
           <Animated.View style={[styles.knob, knob]} pointerEvents="none">
-            <Animated.View style={[styles.knobRing, knobRing]} />
-            <Animated.View
-              style={[
-                styles.knobFace,
-                {
-                  width: knobW,
-                  height: knobH,
-                  borderRadius: skin.knob.radius,
-                  borderColor: skin.knobBorder,
-                },
-                skin.raised && styles.knobRaised,
-                knobDisc,
-              ]}
-            >
-              {skin.glass ? (
-                // Bevel: bright down the top third, neutral through the middle,
-                // barely darkened at the base. That vertical fall-off is what
-                // makes a flat fill read as a raised, lit surface.
-                <LinearGradient
-                  colors={[
-                    'rgba(255,255,255,0.55)',
-                    'rgba(255,255,255,0.10)',
-                    'rgba(0,0,0,0.10)',
-                  ]}
-                  locations={[0, 0.48, 1]}
-                  style={[StyleSheet.absoluteFill, { borderRadius: skin.knob.radius }]}
-                  pointerEvents="none"
-                />
-              ) : null}
-              {skin.stops === 'faces' ? (
-                // The knob wears the expression it is currently between, so the
-                // face morphs under the thumb rather than cutting between five.
-                <MoodFaceLive progress={progress} size={44} color={skin.faceInk} />
-              ) : (
+            {skin.glass ? null : <Animated.View style={[styles.knobRing, knobRing]} />}
+            {skin.glass ? (
+              // A lens riding proud of the bar. The shadow lives on the outer
+              // view because a clipping parent would cut it off, and the fill
+              // and bevel are clipped by the inner one.
+              <View style={[styles.chipLift, chipSize, styles.knobRaised]}>
+                <View style={[styles.chipClip, chipSize, { borderColor: skin.knobBorder }]}>
+                  {/* Slightly translucent, so the bar reads *through* the glass
+                      where the two overlap. */}
+                  <Animated.View style={[StyleSheet.absoluteFill, styles.chipFill, knobDisc]} />
+                  {/* Lit along the top, falling through neutral, with a bright
+                      lip caught at the bottom edge — light wrapping around a
+                      solid rather than a flat wash over it. */}
+                  <LinearGradient
+                    colors={[
+                      'rgba(255,255,255,0.42)',
+                      'rgba(255,255,255,0.06)',
+                      'rgba(255,255,255,0.00)',
+                      'rgba(255,255,255,0.20)',
+                    ]}
+                    locations={[0, 0.30, 0.72, 1]}
+                    style={StyleSheet.absoluteFill}
+                    pointerEvents="none"
+                  />
+                  {/* Explicit z-index, not source order. The fill and bevel
+                      are absolutely positioned, and on web CSS paints
+                      positioned elements after in-flow ones — so without this
+                      the bevel washes straight over the face. */}
+                  <View style={styles.chipFace}>
+                    <MoodFaceLive progress={progress} size={52} color={skin.faceInk} />
+                  </View>
+                </View>
+              </View>
+            ) : (
+              <Animated.View
+                style={[
+                  styles.knobFace,
+                  chipSize,
+                  { borderColor: skin.knobBorder },
+                  skin.raised && styles.knobRaised,
+                  knobDisc,
+                ]}
+              >
                 <Animated.View style={[styles.knobCore, knobCore]} />
-              )}
-            </Animated.View>
+              </Animated.View>
+            )}
           </Animated.View>
         </View>
       </GestureDetector>
@@ -326,24 +336,22 @@ export function MoodArc({
 function Stop({
   index,
   progress,
-  width,
   color,
   kind,
   last,
-  shape,
+  geo,
 }: {
   index: number;
   progress: SharedValue<number>;
-  width: number;
   color: string;
   kind: 'dots' | 'faces';
   last: number;
-  shape: ArcShape;
+  geo: ArcGeometry;
 }) {
   const size = kind === 'faces' ? FACE_SIZE : DOT_SIZE;
   const t = index / last;
-  const left = arcX(t, width) - size / 2;
-  const top = arcY(t, shape) - size / 2;
+  const left = arcX(t, geo) - size / 2;
+  const top = arcY(t, geo) - size / 2;
 
   const style = useAnimatedStyle(() => {
     const distance = Math.abs(progress.value - index);
@@ -373,7 +381,7 @@ const styles = StyleSheet.create({
   caps: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    paddingHorizontal: ARC_INSET - 6,
+    paddingHorizontal: 52,
     marginBottom: 12,
   },
   capLabel: { ...CAPS, color: NEUTRAL.dim },
@@ -399,9 +407,20 @@ const styles = StyleSheet.create({
     elevation: 12,
   },
   knobRaised: {
-    shadowOpacity: 0.18,
-    shadowRadius: 14,
-    shadowOffset: { width: 0, height: 6 },
+    shadowColor: '#1C1A16',
+    shadowOpacity: 0.2,
+    shadowRadius: 12,
+    shadowOffset: { width: 0, height: 5 },
+    elevation: 8,
   },
+  chipLift: { alignItems: 'center', justifyContent: 'center' },
+  chipClip: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    overflow: 'hidden',
+    borderWidth: 1.5,
+  },
+  chipFill: { opacity: 0.94 },
+  chipFace: { zIndex: 1 },
   knobCore: { width: 34, height: 34, borderRadius: 17 },
 });

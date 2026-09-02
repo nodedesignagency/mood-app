@@ -26,13 +26,15 @@ const LIGHT_SKIN: ArcSkin = {
   track: LIGHT_PAPER,
   // A wide, soft rim standing in for the drop shadow the SVG blob can't cast.
   rim: 'rgba(28,26,22,0.07)',
-  rimWidth: 10,
+  rimWidth: 8,
   guide: 'rgba(28,26,22,0.16)',
   knobFace: LIGHT_PAPER,
   knobBorder: 'rgba(255,255,255,0.55)',
   tintKnob: true,
   // Wider than tall, like a selected segment rather than a slider handle.
-  knob: { width: 72, height: 58, radius: 25 },
+  // 1.31x the bar's thickness, matching the reference: the chip overhangs
+  // the bar by ~9pt top and bottom rather than sitting inside it.
+  knob: { width: 80, height: 76, radius: 30 },
   glass: true,
   faceInk: LIGHT_INK,
   stops: 'faces',
