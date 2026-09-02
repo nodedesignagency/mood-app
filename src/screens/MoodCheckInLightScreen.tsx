@@ -14,7 +14,7 @@ import Animated, {
 import { Mascot } from '../components/Mascot';
 import { MoodArc, type ArcSkin } from '../components/MoodArc';
 import { MoodBackdrop, MoodBloom } from '../components/MoodBackdrop';
-import { HILL } from '../lib/arc';
+import { ARCH_SHAPE } from '../lib/arc';
 import { confirmHaptic, settleHaptic, tickHaptic } from '../lib/haptics';
 import { LIGHT_INK, LIGHT_PALETTE, LIGHT_PAPER } from '../theme/moodsLight';
 import { SPACING, rounded } from '../theme/tokens';
@@ -29,8 +29,11 @@ const LIGHT_SKIN: ArcSkin = {
   rimWidth: 10,
   guide: 'rgba(28,26,22,0.16)',
   knobFace: LIGHT_PAPER,
-  knobBorder: 'rgba(28,26,22,0.10)',
+  knobBorder: 'rgba(255,255,255,0.55)',
   tintKnob: true,
+  // Wider than tall, like a selected segment rather than a slider handle.
+  knob: { width: 72, height: 58, radius: 25 },
+  glass: true,
   faceInk: LIGHT_INK,
   stops: 'faces',
   // The five faces say Awful → Great on their own; word labels would repeat it.
@@ -116,7 +119,7 @@ export function MoodCheckInLightScreen() {
             width={width}
             palette={LIGHT_PALETTE}
             skin={LIGHT_SKIN}
-            bend={HILL}
+            shape={ARCH_SHAPE}
             onCross={handleCross}
             onSettle={handleSettle}
           />

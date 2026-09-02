@@ -31,9 +31,13 @@ crosses back to JS, and only when the nearest mood actually changes.
 ## Why the track is a quadratic Bézier
 
 The curve is symmetric: it starts and ends at the same height and bends in the
-middle. Which way it bends is the `bend` argument — `HILL` for v2's arch (the
-middle rides above the ends, like a floating tab bar) or `VALLEY` for v1's
-smile. Both shapes occupy the same box height, so swapping needs no relayout. Because the control point sits exactly halfway between the endpoints
+middle. Direction and amount both come from an `ArcShape`: `ARCH_SHAPE` for v2 (middle
+above the ends, like a floating tab bar) or `VALLEY_SHAPE` for v1's smile.
+
+`depth` is worth being conservative with. Measured against reference tab bars,
+the rise from endpoints to midpoint is only 3–5% of the span; much past that
+and it stops reading as a subtly curved bar and starts reading as a banana.
+v2 runs 13pt over a 274pt span — about 4.7%. Because the control point sits exactly halfway between the endpoints
 horizontally, the x term collapses to a straight line — `x(t) = x0 + (x1-x0)·t`
 — while y stays curved. So finger-x maps to track position with one divide: no
 arc-length table, no Newton iteration per frame. Dots spaced evenly in `t` are

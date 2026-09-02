@@ -13,21 +13,22 @@ import Animated, {
   type SharedValue,
 } from 'react-native-reanimated';
 import Svg, { Path } from 'react-native-svg';
+import { LinearGradient } from 'expo-linear-gradient';
 
 import {
-  ARC_HEIGHT,
   ARC_INSET,
   DOT_SIZE,
   FACE_SIZE,
   KNOB_SIZE,
   TRACK_HEIGHT,
-  VALLEY,
+  VALLEY_SHAPE,
+  arcHeight,
   arcPath,
   arcX,
   arcY,
   tToMood,
   xToT,
-  type ArcBend,
+  type ArcShape,
 } from '../lib/arc';
 import { DARK_PALETTE } from '../theme/moods';
 import type { MoodPalette } from '../theme/palette';
@@ -53,6 +54,15 @@ export type ArcSkin = {
   knobBorder: string;
   /** Tint the whole disc with the mood colour instead of an inner chip. */
   tintKnob: boolean;
+  /** Size and corner of the selected element. */
+  knob: { width: number; height: number; radius: number };
+  /**
+   * Give the selected element the raised-glass treatment: a bright bevel down
+   * the top, a shadow underneath, a light rim. Modelled on iOS's selected
+   * segment, which reads as a lozenge floating above the track rather than a
+   * flat fill sitting in it.
+   */
+  glass: boolean;
   /** Ink used for the emotion faces, when `stops` is 'faces'. */
   faceInk: string;
   /** Coloured dots (v1) or emotion icons (v2). */
@@ -71,6 +81,8 @@ export const DARK_SKIN: ArcSkin = {
   knobFace: '#1B1C21',
   knobBorder: 'rgba(255,255,255,0.22)',
   tintKnob: false,
+  knob: { width: KNOB_SIZE, height: KNOB_SIZE, radius: KNOB_SIZE / 2 },
+  glass: false,
   faceInk: '#1C1A16',
   stops: 'dots',
   endCaps: true,
@@ -97,8 +109,8 @@ type Props = {
   palette?: MoodPalette;
   /** Paint. Defaults to the dark v1 skin. */
   skin?: ArcSkin;
-  /** Which way the track curves. Defaults to v1's valley. */
-  bend?: ArcBend;
+  /** Which way the track curves and how deep. Defaults to v1's valley. */
+  shape?: ArcShape;
 };
 
 export function MoodArc({
@@ -109,9 +121,12 @@ export function MoodArc({
   onSettle,
   palette = DARK_PALETTE,
   skin = DARK_SKIN,
-  bend = VALLEY,
+  shape = VALLEY_SHAPE,
 }: Props) {
   const { stops: MOOD_STOPS, dot: DOT_COLORS, moods: MOODS, last: LAST_MOOD } = palette;
+  const height = arcHeight(shape);
+  const knobW = skin.knob.width;
+  const knobH = skin.knob.height;
   /** Raw finger position, in mood units. */
   const finger = useSharedValue(0);
   /**
@@ -178,8 +193,8 @@ export function MoodArc({
     const t = progress.value / LAST_MOOD;
     return {
       transform: [
-        { translateX: arcX(t, width) - KNOB_SIZE / 2 },
-        { translateY: arcY(t, bend) - KNOB_SIZE / 2 },
+        { translateX: arcX(t, width) - knobW / 2 },
+        { translateY: arcY(t, shape) - knobH / 2 },
         { scale: 1 + pressed.value * 0.08 },
       ],
     };
@@ -202,7 +217,7 @@ export function MoodArc({
     transform: [{ scale: 1 + pressed.value * 0.26 }],
   }));
 
-  const d = arcPath(width, bend);
+  const d = arcPath(width, shape);
 
   return (
     <View style={{ width }}>
@@ -214,8 +229,8 @@ export function MoodArc({
       ) : null}
 
       <GestureDetector gesture={pan}>
-        <View style={[styles.stage, { width, height: ARC_HEIGHT }]}>
-          <Svg width={width} height={ARC_HEIGHT} pointerEvents="none">
+        <View style={[styles.stage, { width, height }]}>
+          <Svg width={width} height={height} pointerEvents="none">
             {/* Stroking the curve *is* the track: one path, rounded caps,
                 thickness = the blob's height. The slightly fatter pass
                 underneath leaves a hairline rim. */}
@@ -253,7 +268,7 @@ export function MoodArc({
               color={skin.stops === 'faces' ? skin.faceInk : mood.dot}
               kind={skin.stops}
               last={LAST_MOOD}
-              bend={bend}
+              shape={shape}
             />
           ))}
 
@@ -262,11 +277,31 @@ export function MoodArc({
             <Animated.View
               style={[
                 styles.knobFace,
-                { borderColor: skin.knobBorder },
+                {
+                  width: knobW,
+                  height: knobH,
+                  borderRadius: skin.knob.radius,
+                  borderColor: skin.knobBorder,
+                },
                 skin.raised && styles.knobRaised,
                 knobDisc,
               ]}
             >
+              {skin.glass ? (
+                // Bevel: bright down the top third, neutral through the middle,
+                // barely darkened at the base. That vertical fall-off is what
+                // makes a flat fill read as a raised, lit surface.
+                <LinearGradient
+                  colors={[
+                    'rgba(255,255,255,0.55)',
+                    'rgba(255,255,255,0.10)',
+                    'rgba(0,0,0,0.10)',
+                  ]}
+                  locations={[0, 0.48, 1]}
+                  style={[StyleSheet.absoluteFill, { borderRadius: skin.knob.radius }]}
+                  pointerEvents="none"
+                />
+              ) : null}
               {skin.stops === 'faces' ? (
                 // The knob wears the expression it is currently between, so the
                 // face morphs under the thumb rather than cutting between five.
@@ -295,7 +330,7 @@ function Stop({
   color,
   kind,
   last,
-  bend,
+  shape,
 }: {
   index: number;
   progress: SharedValue<number>;
@@ -303,12 +338,12 @@ function Stop({
   color: string;
   kind: 'dots' | 'faces';
   last: number;
-  bend: ArcBend;
+  shape: ArcShape;
 }) {
   const size = kind === 'faces' ? FACE_SIZE : DOT_SIZE;
   const t = index / last;
   const left = arcX(t, width) - size / 2;
-  const top = arcY(t, bend) - size / 2;
+  const top = arcY(t, shape) - size / 2;
 
   const style = useAnimatedStyle(() => {
     const distance = Math.abs(progress.value - index);
@@ -344,15 +379,7 @@ const styles = StyleSheet.create({
   capLabel: { ...CAPS, color: NEUTRAL.dim },
   stage: { position: 'relative' },
   dot: { width: DOT_SIZE, height: DOT_SIZE, borderRadius: DOT_SIZE / 2 },
-  knob: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    width: KNOB_SIZE,
-    height: KNOB_SIZE,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
+  knob: { position: 'absolute', top: 0, left: 0, alignItems: 'center', justifyContent: 'center' },
   knobRing: {
     position: 'absolute',
     width: KNOB_SIZE,
@@ -361,12 +388,10 @@ const styles = StyleSheet.create({
     borderWidth: 2,
   },
   knobFace: {
-    width: KNOB_SIZE,
-    height: KNOB_SIZE,
-    borderRadius: KNOB_SIZE / 2,
     borderWidth: 1.5,
     alignItems: 'center',
     justifyContent: 'center',
+    overflow: 'hidden',
     shadowColor: '#000',
     shadowOpacity: 0.45,
     shadowRadius: 18,

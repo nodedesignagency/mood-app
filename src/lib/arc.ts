@@ -40,6 +40,21 @@ export const VALLEY = 1;
 export type ArcBend = typeof HILL | typeof VALLEY;
 
 /**
+ * Which way the track curves and by how much.
+ *
+ * `depth` is in points, measured from the endpoints to the midpoint. It is
+ * worth being conservative with: reference tab bars run a rise of only 3-5% of
+ * their span, and anything much past that stops reading as a subtly curved bar
+ * and starts reading as a banana.
+ */
+export type ArcShape = { bend: ArcBend; depth: number };
+
+/** v1's smile, matching the emotion-slider reference it came from. */
+export const VALLEY_SHAPE: ArcShape = { bend: VALLEY, depth: 30 };
+/** v2's arch. ~4.7% of the travel span, in line with the tab-bar references. */
+export const ARCH_SHAPE: ArcShape = { bend: HILL, depth: 13 };
+
+/**
  * Horizontal breathing room between the arc box and the ends of the curve.
  *
  * Must clear half the track thickness plus half the knob at its pressed scale,
@@ -50,8 +65,7 @@ export type ArcBend = typeof HILL | typeof VALLEY;
 export const ARC_INSET = 58;
 /** Thickness of the blob the curve is stroked into. */
 export const TRACK_HEIGHT = 88;
-/** How far the middle of the curve departs from its ends, in either direction. */
-export const ARC_BEND = 30;
+
 /** Vertical padding so the knob can grow past the blob without clipping. */
 export const ARC_PAD_V = 16;
 
@@ -60,8 +74,10 @@ export const DOT_SIZE = 13;
 /** Emotion-icon stops are larger than colour chips - they carry detail. */
 export const FACE_SIZE = 34;
 
-/** Total height of the arc box. Identical for both bends. */
-export const ARC_HEIGHT = ARC_PAD_V * 2 + TRACK_HEIGHT + ARC_BEND;
+/** Total height of the arc box for a given shape. */
+export function arcHeight(shape: ArcShape): number {
+  return ARC_PAD_V * 2 + TRACK_HEIGHT + shape.depth;
+}
 
 /**
  * Height of the curve's endpoints.
@@ -69,10 +85,10 @@ export const ARC_HEIGHT = ARC_PAD_V * 2 + TRACK_HEIGHT + ARC_BEND;
  * An arch pushes its middle up, so its ends have to start lower to keep the
  * blob inside the box; a valley is the mirror image.
  */
-export function arcYEnds(bend: ArcBend): number {
+export function arcYEnds(shape: ArcShape): number {
   'worklet';
-  return bend === HILL
-    ? ARC_PAD_V + ARC_BEND + TRACK_HEIGHT / 2
+  return shape.bend === HILL
+    ? ARC_PAD_V + shape.depth + TRACK_HEIGHT / 2
     : ARC_PAD_V + TRACK_HEIGHT / 2;
 }
 
@@ -95,9 +111,9 @@ export function arcX(t: number, width: number): number {
 }
 
 /** Curve position `t` (0…1) → y, in arc-box coordinates. */
-export function arcY(t: number, bend: ArcBend): number {
+export function arcY(t: number, shape: ArcShape): number {
   'worklet';
-  return arcYEnds(bend) + bend * 4 * ARC_BEND * t * (1 - t);
+  return arcYEnds(shape) + shape.bend * 4 * shape.depth * t * (1 - t);
 }
 
 /** Finger x → curve position `t`, clamped to the ends of the track. */
@@ -121,12 +137,12 @@ export function moodToT(index: number): number {
 }
 
 /** SVG path for the curve. Stroking it thickly *is* the track blob. */
-export function arcPath(width: number, bend: ArcBend): string {
+export function arcPath(width: number, shape: ArcShape): string {
   const x0 = ARC_INSET;
   const x1 = width - ARC_INSET;
-  const yEnds = arcYEnds(bend);
+  const yEnds = arcYEnds(shape);
   // A quadratic reaches only half way to its control point, so the control
-  // sits at twice the bend to land the midpoint exactly on it.
-  const ctrlY = yEnds + bend * ARC_BEND * 2;
+  // sits at twice the depth to land the midpoint exactly on it.
+  const ctrlY = yEnds + shape.bend * shape.depth * 2;
   return `M ${x0} ${yEnds} Q ${(x0 + x1) / 2} ${ctrlY} ${x1} ${yEnds}`;
 }
