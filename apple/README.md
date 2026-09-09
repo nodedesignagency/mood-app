@@ -24,6 +24,20 @@ No extra tooling needed. In Xcode:
 Sources live in `apple/Sources/`, deliberately not `apple/Mood/`, so Xcode's
 template folder never collides with them.
 
+### Why the .xcodeproj is committed
+
+It is the file that records which sources exist. Ignoring it means every file
+added on one machine has to be re-added by hand on every other — so it is
+checked in, and only the per-user parts (`xcuserdata`) are ignored.
+
+Combined with `Sources` being a **synchronized folder** (blue, not yellow, in
+the navigator), that makes `git pull` sufficient: new files land on disk and
+Xcode picks them up without anyone touching the project.
+
+If you ever see "cannot find X in scope" for a file that plainly exists, the
+`Sources` folder has reverted to a yellow group — re-add it as a folder
+reference.
+
 ### Optional: generate the project instead
 
 `project.yml` is an [XcodeGen](https://github.com/yonaskolb/XcodeGen) spec, so
