@@ -11,15 +11,24 @@ set -euo pipefail
 cd "$(dirname "$0")"
 
 DEVICE="${DEVICE:-iPhone 17 Pro}"
-SCHEME="Mood"
-BUNDLE_ID="com.nodedesignagency.Mood"
+BUNDLE_ID="${BUNDLE_ID:-com.nodedesignagency.Mood}"
 BUILD_DIR="build"
+
+# Find the project rather than assuming where it sits: Xcode wraps a new
+# project in a folder of its own, so it lands a level deeper than you'd expect.
+PROJECT="$(find . -maxdepth 3 -name '*.xcodeproj' -not -path './build/*' -print -quit)"
+if [ -z "$PROJECT" ]; then
+  echo "✗ No .xcodeproj found under $(pwd)." >&2
+  echo "  Create one in Xcode (File → New → Project → iOS App) first." >&2
+  exit 1
+fi
+SCHEME="$(basename "$PROJECT" .xcodeproj)"
 APP="$BUILD_DIR/Build/Products/Debug-iphonesimulator/$SCHEME.app"
 
-echo "▸ Building for $DEVICE"
+echo "▸ Building $SCHEME for $DEVICE"
 # `| xcbeautify` is nicer if you have it; grep keeps the noise down without it.
 xcodebuild \
-  -project "$SCHEME.xcodeproj" \
+  -project "$PROJECT" \
   -scheme "$SCHEME" \
   -configuration Debug \
   -destination "platform=iOS Simulator,name=$DEVICE" \
