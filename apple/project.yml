@@ -18,7 +18,7 @@ targets:
     type: application
     platform: iOS
     sources:
-      - path: Mood
+      - path: Sources
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: com.nodedesignagency.mood

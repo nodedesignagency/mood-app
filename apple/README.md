@@ -6,19 +6,35 @@ Native version in the repo root.
 
 ## Opening it
 
+No extra tooling needed. In Xcode:
+
+1. **File → New → Project → iOS → App.**
+   Product Name `Mood`, Interface **SwiftUI**, Language **Swift**.
+   Save it into this `apple/` folder.
+2. Set the target's **Minimum Deployments** to **iOS 26.0**
+   (target → General). Liquid Glass will not compile below that.
+3. In the Project navigator, **delete the two files Xcode generated** —
+   `MoodApp.swift` and `ContentView.swift` — choosing *Move to Trash*.
+   Ours already has an `@main`, and two of them will not compile.
+4. Drag the **`Sources` folder** from Finder into the project.
+   Tick *Copy items if needed* **off**, and choose
+   *Create groups* (or *Create folder references* — either works).
+5. Pick your team under Signing & Capabilities, then run.
+
+Sources live in `apple/Sources/`, deliberately not `apple/Mood/`, so Xcode's
+template folder never collides with them.
+
+### Optional: generate the project instead
+
+`project.yml` is an [XcodeGen](https://github.com/yonaskolb/XcodeGen) spec, so
+the `.xcodeproj` can be regenerated rather than checked in — worth it later to
+stop project files conflicting in git. Needs Homebrew:
+
 ```bash
+/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
 brew install xcodegen
-cd apple && xcodegen        # generates Mood.xcodeproj
-open Mood.xcodeproj
+cd apple && xcodegen && open Mood.xcodeproj
 ```
-
-The project file is generated, not checked in, so it never conflicts in git and
-never drifts from the files on disk. If you'd rather not install XcodeGen:
-File → New → Project → iOS App (SwiftUI), target iOS 26, then drag the `Mood`
-folder in.
-
-Set `DEVELOPMENT_TEAM` in `project.yml`, or just pick your team in Xcode's
-Signing tab.
 
 ## How the selector works
 
