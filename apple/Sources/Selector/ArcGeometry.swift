@@ -30,11 +30,18 @@ struct ArcSpec {
     /// Measured across the *bar*. Since the travel is inset from the bar's
     /// ends it only covers the middle of the parabola, so the arch actually
     /// read is shallower than this. Reference tab bars run 3–5% of their span.
-    var depth: CGFloat = 20
-    /// Thickness of the bar.
-    var track: CGFloat = 58
-    var barInset: CGFloat = 30
-    var travelInset: CGFloat = 60
+    ///
+    /// Measured off the Figma frame: the stops rise ~14.5pt from the outer
+    /// pair to the middle one. Because the travel is inset from the bar's ends
+    /// it only covers the middle of the parabola, so the bar's own depth has to
+    /// be larger than that to leave 14.5 across the travelled part.
+    var depth: CGFloat = 30
+    /// Thickness of the bar. Figma frame measures ~70.
+    var track: CGFloat = 70
+    /// The bar runs nearly edge to edge in the design.
+    var barInset: CGFloat = 4
+    /// Leaves ~67pt between stops on a 393pt-wide screen, as in the Figma frame.
+    var travelInset: CGFloat = 62
 }
 
 /// `ArcSpec` resolved against a concrete width and chip height.

@@ -36,6 +36,22 @@ brew install xcodegen
 cd apple && xcodegen && open Mood.xcodeproj
 ```
 
+## Running from the terminal
+
+```bash
+cd apple
+./run.sh              # build, boot the Simulator, launch
+./run.sh shot         # ...and save a screenshot to shot.png
+./run.sh shot out.png # ...to a name of your choosing
+```
+
+Xcode still has to be installed — the script drives its command-line tools —
+but build, launch and screenshot collapse into one repeatable command. Set a
+different device with `DEVICE="iPhone 17" ./run.sh`.
+
+Errors come out plainer here than in Xcode's UI, which makes them easier to
+paste when something breaks.
+
 ## How the selector works
 
 One continuous value, `progress`, runs 0 → 4 and is the only state. The bar,
@@ -55,7 +71,12 @@ from the Figma file:
 | --- | --- |
 | Accent / glow colours per mood | `Design/MoodScale.swift` |
 | Type sizes and weights | `Screen/MoodCheckInView.swift` |
-| Bar thickness, chip size, arch depth | `ArcSpec` defaults in `ArcGeometry.swift` |
+
+Values already transcribed from Figma live in `Design/FigmaTokens.swift`, kept
+against their source layer names so each one can be checked against the design.
+
+| Still needed | Where |
+| --- | --- |
 | Mascot art | `Assets` as `mascot-awful` … `mascot-great` |
 | Mood icons | `Selector/MoodFace.swift` — swap for `Image(...)` |
 

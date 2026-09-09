@@ -12,7 +12,7 @@ struct MoodArcBar: View {
     var onSettle: (Int) -> Void = { _ in }
 
     var spec = ArcSpec()
-    var chipSize = CGSize(width: 80, height: 76)
+    var chipSize = Figma.chipSize
 
     @State private var isDragging = false
     @Namespace private var glassNamespace
@@ -31,7 +31,7 @@ struct MoodArcBar: View {
                 GlassEffectContainer(spacing: 18) {
                     ZStack(alignment: .topLeading) {
                         ArcBarShape(geo: geo)
-                            .fill(.clear)
+                            .fill(Figma.barFill)
                             .glassEffect(.regular, in: ArcBarShape(geo: geo))
                             .frame(width: geo.width, height: geo.height)
 
@@ -72,19 +72,25 @@ struct MoodArcBar: View {
         let u = progress / Double(MoodScale.last)
         let centre = geo.point(at: CGFloat(u))
 
-        return RoundedRectangle(cornerRadius: chipSize.height / 2.5, style: .continuous)
-            .fill(.clear)
+        return Capsule(style: .continuous)
+            .fill(Figma.chipFill)
             .glassEffect(
                 // `.interactive()` is what makes it flex and brighten under a
-                // finger — the pressed state in the mockup comes free with it.
-                .regular.tint(MoodScale.accent(at: progress).opacity(0.55)).interactive(),
-                in: RoundedRectangle(cornerRadius: chipSize.height / 2.5, style: .continuous)
+                // finger — the "when pressed" frame comes free with it.
+                .regular.interactive(),
+                in: Capsule(style: .continuous)
             )
             .glassEffectID("chip", in: glassNamespace)
             .overlay {
-                MoodFace(progress: progress, size: 46, color: .black.opacity(0.82))
+                MoodFace(progress: progress, size: Figma.iconSize, color: Figma.iconInk)
             }
             .frame(width: chipSize.width, height: chipSize.height)
+            .shadow(
+                color: Figma.chipShadowColor,
+                radius: Figma.chipShadowRadius,
+                x: 0,
+                y: Figma.chipShadowY
+            )
             .scaleEffect(isDragging ? 1.06 : 1)
             .position(centre)
     }
@@ -96,7 +102,7 @@ struct MoodArcBar: View {
         let distance = abs(progress - Double(mood.id))
         let visible = min(1, max(0, (distance - 0.55) / 0.65))
 
-        return MoodFace(progress: Double(mood.id), size: 34, color: .black.opacity(0.55))
+        return MoodFace(progress: Double(mood.id), size: Figma.iconSize, color: Figma.iconInk)
             .opacity(visible)
             .scaleEffect(0.8 + 0.2 * visible)
             .position(geo.point(at: u))

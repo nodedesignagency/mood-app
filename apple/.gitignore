@@ -4,3 +4,5 @@ Mood.xcodeproj/
 xcuserdata/
 DerivedData/
 .DS_Store
+build/
+shot*.png
