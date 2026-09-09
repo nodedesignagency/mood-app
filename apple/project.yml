@@ -1,0 +1,27 @@
+# XcodeGen spec — `brew install xcodegen && cd apple && xcodegen`
+# Prefer this over a checked-in .xcodeproj: the project file is generated, so it
+# never conflicts in git and never drifts from the files on disk.
+name: Mood
+options:
+  bundleIdPrefix: com.nodedesignagency
+  deploymentTarget:
+    iOS: "26.0"
+  createIntermediateGroups: true
+settings:
+  base:
+    SWIFT_VERSION: "6.0"
+    DEVELOPMENT_TEAM: ""          # ← your Apple team ID, or set it in Xcode
+    CODE_SIGN_STYLE: Automatic
+    ENABLE_USER_SCRIPT_SANDBOXING: YES
+targets:
+  Mood:
+    type: application
+    platform: iOS
+    sources:
+      - path: Mood
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.nodedesignagency.mood
+        INFOPLIST_KEY_UILaunchScreen_Generation: YES
+        INFOPLIST_KEY_UISupportedInterfaceOrientations: UIInterfaceOrientationPortrait
+        ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
