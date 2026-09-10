@@ -23,6 +23,20 @@ if [ -z "$PROJECT" ]; then
   exit 1
 fi
 SCHEME="$(basename "$PROJECT" .xcodeproj)"
+
+# Xcode's "Add Files" dialog defaults to "Copy files to destination", which
+# silently duplicates the sources inside the project folder. The build then
+# compiles the copy while git updates the original, and every change appears
+# to do nothing. Catch it here rather than after a confusing build failure.
+DUPES="$(find . -path ./Sources -prune -o -type d -name Sources -print 2>/dev/null)"
+if [ -n "$DUPES" ]; then
+  echo "✗ A second copy of Sources exists:" >&2
+  echo "$DUPES" | sed 's/^/    /' >&2
+  echo "  Xcode is probably compiling that instead of ./Sources, so pulled" >&2
+  echo "  changes will not take effect. Delete it, then re-add ./Sources in" >&2
+  echo "  Xcode with Action set to 'Reference files in place'." >&2
+  exit 1
+fi
 APP="$BUILD_DIR/Build/Products/Debug-iphonesimulator/$SCHEME.app"
 
 echo "▸ Building $SCHEME for $DEVICE"
