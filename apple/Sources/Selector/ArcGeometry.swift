@@ -38,8 +38,13 @@ struct ArcSpec {
     var depth: CGFloat = 30
     /// Thickness of the bar. Figma frame measures ~70.
     var track: CGFloat = 70
-    /// The bar runs nearly edge to edge in the design.
-    var barInset: CGFloat = 4
+    /// Where the curve's endpoints sit.
+    ///
+    /// NOT where the bar visually ends: the rounded cap extends `track / 2`
+    /// past this, so anything below that puts the bar off-screen. For a bar
+    /// that reaches ~2pt from each edge of a 393pt screen with a 70pt track,
+    /// the endpoints have to start 37 in.
+    var barInset: CGFloat = 37
     /// Leaves ~67pt between stops on a 393pt-wide screen, as in the Figma frame.
     var travelInset: CGFloat = 62
 }
@@ -56,13 +61,28 @@ struct ArcGeometry {
     /// Vertical breathing room above and below whatever reaches furthest.
     static let padV: CGFloat = 14
 
+    /// How far the furthest of bar and chip reaches from the curve.
+    ///
+    /// The chip may be the taller of the two, and it grows while pressed, so
+    /// both are accounted for or the box clips at the extremes.
+    static func reach(spec: ArcSpec, chipHeight: CGFloat) -> CGFloat {
+        max(spec.track, chipHeight * PRESS_SCALE) / 2
+    }
+
+    /// Box height, which depends only on the shape and the chip — not on width.
+    /// Named apart from the stored `height` so a call site cannot be misread.
+    static func boxHeight(spec: ArcSpec, chipHeight: CGFloat) -> CGFloat {
+        padV * 2 + spec.depth + reach(spec: spec, chipHeight: chipHeight) * 2
+    }
+
     /// The box is sized by whichever of bar or chip reaches further from the
     /// curve — the chip may be the taller of the two, and that overhang is
     /// what makes it read as riding proud of the bar.
     init(spec: ArcSpec, width: CGFloat, chipHeight: CGFloat) {
         self.spec = spec
         self.width = width
-        let reach = max(spec.track, chipHeight) / 2
+        // Same helper the frame height uses, so the two cannot drift apart.
+        let reach = Self.reach(spec: spec, chipHeight: chipHeight)
         // An arch pushes its middle up, so its ends must start lower to stay
         // in the box; a sag is the mirror image.
         self.yEnds = Self.padV + reach + (spec.bend < 0 ? spec.depth : 0)

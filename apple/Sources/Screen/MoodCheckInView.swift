@@ -49,6 +49,9 @@ struct MoodCheckInView: View {
 
                 MoodArcBar(progress: $progress)
                     .padding(.top, 10)
+                    // Escape the stack's gutter: the bar is full-bleed in the
+                    // design, reaching within a couple of points of each edge.
+                    .padding(.horizontal, -20)
             }
             .padding(.horizontal, 20)
         }
@@ -56,15 +59,29 @@ struct MoodCheckInView: View {
 
     // MARK: - Pieces
 
-    /// Paper with a soft bloom behind the character, tinted by the mood.
+    /// Paper washed with light, plus a bloom behind the character.
+    ///
+    /// PLACEHOLDER gradient — read off the mockup, not from the Figma file.
+    /// It matters more than it looks: the bar's fill is E9EDF4 at 60%, which
+    /// over pure white lands at roughly #F1F4F8 and reads as no colour at all.
+    /// The design's blue wash is what gives that fill something to sit against,
+    /// and what the glass has anything to refract.
     private var backdrop: some View {
         ZStack {
-            Color(.systemBackground)
+            LinearGradient(
+                colors: [
+                    Color(hex: 0xFBFCFE),
+                    Color(hex: 0xE4EEFA),
+                    Color(hex: 0xEFF5FC),
+                ],
+                startPoint: .top,
+                endPoint: .bottom
+            )
             RadialGradient(
-                colors: [MoodScale.glow(at: progress), .clear],
+                colors: [MoodScale.glow(at: progress).opacity(0.9), .clear],
                 center: .init(x: 0.5, y: 0.42),
                 startRadius: 0,
-                endRadius: 340
+                endRadius: 320
             )
             .animation(.easeOut(duration: 0.25), value: progress)
         }

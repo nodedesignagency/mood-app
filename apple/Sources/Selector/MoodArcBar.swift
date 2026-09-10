@@ -56,7 +56,7 @@ struct MoodArcBar: View {
                 value: progress
             )
         }
-        .frame(height: ArcGeometry(spec: spec, width: 400, chipHeight: chipSize.height).height)
+        .frame(height: ArcGeometry.boxHeight(spec: spec, chipHeight: chipSize.height))
         // One tick per crossing, a firmer one on settle. Fires on a real
         // device only — the Simulator has no haptic hardware.
         .sensoryFeedback(.selection, trigger: nearest)

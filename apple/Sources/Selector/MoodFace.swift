@@ -26,37 +26,56 @@ struct FaceTraits {
     }
 }
 
+/// The mouth: one quadratic whose control point sweeps frown → grin.
+struct MouthShape: Shape {
+    var half: CGFloat
+    var curve: CGFloat
+
+    func path(in rect: CGRect) -> Path {
+        let k = rect.width / 100
+        var p = Path()
+        p.move(to: CGPoint(x: (50 - half) * k, y: MoodFace.mouthY * k))
+        p.addQuadCurve(
+            to: CGPoint(x: (50 + half) * k, y: MoodFace.mouthY * k),
+            control: CGPoint(x: 50 * k, y: (MoodFace.mouthY + curve) * k)
+        )
+        return p
+    }
+}
+
+/// A face at a continuous mood position.
+///
+/// Built from plain shapes rather than a `Canvas`. A Canvas wants
+/// `drawingGroup()` to avoid re-rasterising every frame of a drag, and that
+/// rasterises offscreen — which does not compose dependably when the face is
+/// an overlay on a glass surface. Two ellipses and a stroked path cost
+/// nothing and always draw.
 struct MoodFace: View {
     /// Continuous mood position, 0…4.
     var progress: Double
     var size: CGFloat
     var color: Color
 
-    private let eyeCX: CGFloat = 34
-    private let eyeCY: CGFloat = 40
-    private let eyeRX: CGFloat = 8.5
-    private let mouthY: CGFloat = 64
+    /// Geometry in the shared 100×100 space.
+    static let mouthY: CGFloat = 64
+    private static let eyeOffsetX: CGFloat = 16
+    private static let eyeOffsetY: CGFloat = -10
+    private static let eyeWidth: CGFloat = 17
 
     var body: some View {
         let t = FaceTraits.at(progress)
         let k = size / 100
 
-        Canvas { ctx, _ in
-            for cx in [eyeCX, 100 - eyeCX] {
-                let rect = CGRect(x: (cx - eyeRX) * k, y: (eyeCY - t.eyeRY) * k,
-                                  width: eyeRX * 2 * k, height: t.eyeRY * 2 * k)
-                ctx.fill(Path(ellipseIn: rect), with: .color(color))
+        ZStack {
+            ForEach([CGFloat(-1), CGFloat(1)], id: \.self) { side in
+                Ellipse()
+                    .fill(color)
+                    .frame(width: Self.eyeWidth * k, height: t.eyeRY * 2 * k)
+                    .offset(x: Self.eyeOffsetX * k * side, y: Self.eyeOffsetY * k)
             }
-            var mouth = Path()
-            mouth.move(to: CGPoint(x: (50 - t.half) * k, y: mouthY * k))
-            mouth.addQuadCurve(to: CGPoint(x: (50 + t.half) * k, y: mouthY * k),
-                               control: CGPoint(x: 50 * k, y: (mouthY + t.curve) * k))
-            ctx.stroke(mouth, with: .color(color),
-                       style: StrokeStyle(lineWidth: 8 * k, lineCap: .round))
+            MouthShape(half: t.half, curve: t.curve)
+                .stroke(color, style: StrokeStyle(lineWidth: 8 * k, lineCap: .round))
         }
         .frame(width: size, height: size)
-        // Canvas is redrawn per frame while dragging; without this it is also
-        // re-rasterised at unchanged scale, which is wasted work.
-        .drawingGroup()
     }
 }
