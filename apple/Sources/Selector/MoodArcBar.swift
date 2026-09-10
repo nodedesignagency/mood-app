@@ -91,7 +91,7 @@ struct MoodArcBar: View {
                 x: 0,
                 y: Figma.chipShadowY
             )
-            .scaleEffect(isDragging ? 1.06 : 1)
+            .scaleEffect(isDragging ? ArcGeometry.pressScale : 1)
             .position(centre)
     }
 

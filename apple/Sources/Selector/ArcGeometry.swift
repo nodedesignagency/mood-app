@@ -61,12 +61,16 @@ struct ArcGeometry {
     /// Vertical breathing room above and below whatever reaches furthest.
     static let padV: CGFloat = 14
 
+    /// How much the chip grows while a thumb is on it. The box has to allow
+    /// for the grown size, or the chip clips at the extremes when pressed.
+    static let pressScale: CGFloat = 1.08
+
     /// How far the furthest of bar and chip reaches from the curve.
     ///
     /// The chip may be the taller of the two, and it grows while pressed, so
     /// both are accounted for or the box clips at the extremes.
     static func reach(spec: ArcSpec, chipHeight: CGFloat) -> CGFloat {
-        max(spec.track, chipHeight * PRESS_SCALE) / 2
+        max(spec.track, chipHeight * pressScale) / 2
     }
 
     /// Box height, which depends only on the shape and the chip — not on width.
