@@ -24,16 +24,18 @@ struct MoodArcBar: View {
             let geo = ArcGeometry(spec: spec, width: proxy.size.width, chipHeight: chipSize.height)
 
             ZStack(alignment: .topLeading) {
-                // Deliberately NOT in a shared GlassEffectContainer. Its
-                // `spacing` is a merge threshold: glass surfaces closer than
-                // that fuse into one shape. The chip sits directly on the bar,
-                // so grouping them dissolved the chip's edge and swallowed its
-                // icon. They are two distinct surfaces in the design, and two
-                // independent glass effects here.
-                ArcBarShape(geo: geo)
-                    .fill(Figma.barFill)
-                    .glassEffect(.regular, in: ArcBarShape(geo: geo))
-                    .frame(width: geo.width, height: geo.height)
+                // No `glassEffect` on either surface. See the Glass note in
+                // FigmaTokens: it refracts what sits behind it, and behind
+                // these is a near-white bar on a near-white background, so it
+                // renders flat. Figma's Glass draws a rim and bevel regardless
+                // of backdrop, so that is drawn here instead.
+                ZStack {
+                    ArcBarShape(geo: geo).fill(Figma.barFill)
+                    ArcBarShape(geo: geo).fill(GlassBevel.bar.sheen)
+                    ArcBarShape(geo: geo)
+                        .stroke(GlassBevel.bar.rim, lineWidth: GlassBevel.bar.rimWidth)
+                }
+                .frame(width: geo.width, height: geo.height)
 
                 ForEach(MoodScale.all) { mood in
                     stop(mood: mood, geo: geo)
@@ -73,21 +75,23 @@ struct MoodArcBar: View {
         let u = progress / Double(MoodScale.last)
         let centre = geo.point(at: CGFloat(u))
 
-        // Layered bottom to top: glass, then the 65% white fill, then the
-        // icon. `glassEffect` backs whatever it is applied to, so the icon is
-        // the content and the fill is its background — applying glass to a
-        // filled capsule and overlaying the icon puts them in the wrong order,
-        // which is what left the chip blank.
-        return MoodFace(progress: progress, size: Figma.iconSize, color: Figma.iconInk)
-            .frame(width: chipSize.width, height: chipSize.height)
-            .background(Capsule().fill(Figma.chipFill))
-            .glassEffect(.regular.interactive(), in: Capsule())
-            .shadow(
-                color: Figma.chipShadowColor,
-                radius: Figma.chipShadowRadius,
-                x: 0,
-                y: Figma.chipShadowY
-            )
+        // Bottom to top: body fill, the bevel's sheen, the lit rim, then the
+        // icon. `compositingGroup` flattens the stack before the shadow, so
+        // the shadow is cast by the composed capsule rather than by each layer.
+        return ZStack {
+            Capsule().fill(Figma.chipFill)
+            Capsule().fill(GlassBevel.chip.sheen)
+            Capsule().strokeBorder(GlassBevel.chip.rim, lineWidth: GlassBevel.chip.rimWidth)
+            MoodFace(progress: progress, size: Figma.iconSize, color: Figma.iconInk)
+        }
+        .frame(width: chipSize.width, height: chipSize.height)
+        .compositingGroup()
+        .shadow(
+            color: Figma.chipShadowColor,
+            radius: Figma.chipShadowRadius,
+            x: 0,
+            y: Figma.chipShadowY
+        )
             .scaleEffect(isDragging ? ArcGeometry.pressScale : 1)
             .position(centre)
     }
