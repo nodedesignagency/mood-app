@@ -32,21 +32,22 @@ struct ArcSpec {
     /// read is shallower than this. Reference tab bars run 3–5% of their span.
     ///
     /// Measured off the Figma frame: the stops rise ~14.5pt from the outer
-    /// pair to the middle one. Because the travel is inset from the bar's ends
-    /// it only covers the middle of the parabola, so the bar's own depth has to
-    /// be larger than that to leave 14.5 across the travelled part.
-    var depth: CGFloat = 30
+    /// pair to the middle one. The travel is inset from the bar's ends so it
+    /// only covers the middle of the parabola, where the curve is flatter —
+    /// which costs about 13% of the depth, hence 17 rather than 14.5.
+    var depth: CGFloat = 17
     /// Thickness of the bar. Figma frame measures ~70.
     var track: CGFloat = 70
     /// Where the curve's endpoints sit.
     ///
     /// NOT where the bar visually ends: the rounded cap extends `track / 2`
-    /// past this, so anything below that puts the bar off-screen. For a bar
-    /// that reaches ~2pt from each edge of a 393pt screen with a 70pt track,
-    /// the endpoints have to start 37 in.
-    var barInset: CGFloat = 37
-    /// Leaves ~67pt between stops on a 393pt-wide screen, as in the Figma frame.
-    var travelInset: CGFloat = 62
+    /// past this. The design leaves ~24pt clear at each side, so with a 70pt
+    /// track the endpoints start 24 + 35 in.
+    var barInset: CGFloat = 59
+    /// Far enough in that the chip stays inside the bar horizontally at either
+    /// extreme — the bar's edge plus half the chip, plus a little room. Leaves
+    /// ~64pt between stops on a 393pt screen, against ~65 in the frame.
+    var travelInset: CGFloat = 68
 }
 
 /// `ArcSpec` resolved against a concrete width and chip height.

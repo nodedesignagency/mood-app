@@ -7,6 +7,11 @@ import SwiftUI
 /// against the design without hunting for it.
 enum Figma {
 
+    // MARK: - App background
+
+    /// The app's base colour.
+    static let background = Color(hex: 0xF8F9FC)
+
     // MARK: - Bar — layer "Ellipse 4271"
 
     static let barFill = Color(hex: 0xE9EDF4).opacity(0.60)

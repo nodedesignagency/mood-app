@@ -72,19 +72,27 @@ struct MoodArcBar: View {
         let u = progress / Double(MoodScale.last)
         let centre = geo.point(at: CGFloat(u))
 
-        return Capsule(style: .continuous)
+        return Capsule()
             .fill(Figma.chipFill)
+            // Size before the glass, so the effect is applied to a capsule of
+            // known dimensions rather than to whatever the parent proposes.
+            .frame(width: chipSize.width, height: chipSize.height)
             .glassEffect(
                 // `.interactive()` is what makes it flex and brighten under a
                 // finger — the "when pressed" frame comes free with it.
                 .regular.interactive(),
-                in: Capsule(style: .continuous)
+                in: Capsule()
             )
             .glassEffectID("chip", in: glassNamespace)
+            // White at 65% over the bar differs from it by about ten levels,
+            // so on its own the chip reads as a smudge. The rim is what gives
+            // it an edge; the shadow is what lifts it off the bar.
+            .overlay {
+                Capsule().strokeBorder(.white.opacity(0.85), lineWidth: 1)
+            }
             .overlay {
                 MoodFace(progress: progress, size: Figma.iconSize, color: Figma.iconInk)
             }
-            .frame(width: chipSize.width, height: chipSize.height)
             .shadow(
                 color: Figma.chipShadowColor,
                 radius: Figma.chipShadowRadius,

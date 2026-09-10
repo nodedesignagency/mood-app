@@ -59,24 +59,14 @@ struct MoodCheckInView: View {
 
     // MARK: - Pieces
 
-    /// Paper washed with light, plus a bloom behind the character.
+    /// The app's background colour, with a mood-tinted bloom over it.
     ///
-    /// PLACEHOLDER gradient — read off the mockup, not from the Figma file.
-    /// It matters more than it looks: the bar's fill is E9EDF4 at 60%, which
-    /// over pure white lands at roughly #F1F4F8 and reads as no colour at all.
-    /// The design's blue wash is what gives that fill something to sit against,
-    /// and what the glass has anything to refract.
+    /// The flat colour matters more than it looks: the bar's fill is E9EDF4 at
+    /// 60%, so it lands about ten levels off whatever sits behind it. On pure
+    /// white that reads as no colour at all; on F8F9FC it reads.
     private var backdrop: some View {
         ZStack {
-            LinearGradient(
-                colors: [
-                    Color(hex: 0xFBFCFE),
-                    Color(hex: 0xE4EEFA),
-                    Color(hex: 0xEFF5FC),
-                ],
-                startPoint: .top,
-                endPoint: .bottom
-            )
+            Figma.background
             RadialGradient(
                 colors: [MoodScale.glow(at: progress).opacity(0.9), .clear],
                 center: .init(x: 0.5, y: 0.42),
