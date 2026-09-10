@@ -5,37 +5,31 @@ import SwiftUI
 /// You don't tap a mood. You press anywhere on the bar and slide — the chip
 /// travels to your thumb, then follows it, and on release it magnetises onto
 /// the nearest mood.
+///
+/// Positions come from `BarLayout`, measured out of the Figma file. Nothing
+/// here computes where a stop goes.
 struct MoodArcBar: View {
     /// Continuous position, 0…4. Owned by the screen, driven from here.
     @Binding var progress: Double
     /// Fires once the chip has settled after release.
     var onSettle: (Int) -> Void = { _ in }
 
-    var spec = ArcSpec()
-    var chipSize = Figma.chipSize
-
     @State private var isDragging = false
 
+    /// How much the chip grows while a thumb is on it.
+    private let pressScale: CGFloat = 1.06
+
     /// Nearest stop, recomputed continuously — drives the haptic and the label.
-    private var nearest: Int { min(MoodScale.last, max(0, Int(progress.rounded()))) }
+    private var nearest: Int {
+        min(BarLayout.last, max(0, Int(progress.rounded())))
+    }
 
     var body: some View {
         GeometryReader { proxy in
-            let geo = ArcGeometry(spec: spec, width: proxy.size.width, chipHeight: chipSize.height)
+            let geo = ArcGeometry(width: proxy.size.width)
 
             ZStack(alignment: .topLeading) {
-                // No `glassEffect` on either surface. See the Glass note in
-                // FigmaTokens: it refracts what sits behind it, and behind
-                // these is a near-white bar on a near-white background, so it
-                // renders flat. Figma's Glass draws a rim and bevel regardless
-                // of backdrop, so that is drawn here instead.
-                ZStack {
-                    ArcBarShape(geo: geo).fill(Figma.barFill)
-                    ArcBarShape(geo: geo).fill(GlassBevel.bar.sheen)
-                    ArcBarShape(geo: geo)
-                        .stroke(GlassBevel.bar.rim, lineWidth: GlassBevel.bar.rimWidth)
-                }
-                .frame(width: geo.width, height: geo.height)
+                bar(geo: geo)
 
                 ForEach(MoodScale.all) { mood in
                     stop(mood: mood, geo: geo)
@@ -43,7 +37,7 @@ struct MoodArcBar: View {
 
                 chip(geo: geo)
             }
-            .frame(width: geo.width, height: geo.height)
+            .frame(width: proxy.size.width, height: geo.height)
             .contentShape(Rectangle())
             .gesture(drag(geo: geo))
             // Tracking springs tight so the chip feels welded to the thumb;
@@ -56,7 +50,7 @@ struct MoodArcBar: View {
                 value: progress
             )
         }
-        .frame(height: ArcGeometry.boxHeight(spec: spec, chipHeight: chipSize.height))
+        .frame(height: BarLayout.frameHeight)
         // One tick per crossing, a firmer one on settle. Fires on a real
         // device only — the Simulator has no haptic hardware.
         .sensoryFeedback(.selection, trigger: nearest)
@@ -67,24 +61,32 @@ struct MoodArcBar: View {
 
     // MARK: - Pieces
 
+    /// No `glassEffect` on either surface. See the Glass note in FigmaTokens:
+    /// it refracts what sits behind it, and behind these is a near-white bar on
+    /// a near-white background, so it renders flat. Figma's Glass draws a rim
+    /// and bevel regardless of backdrop, so that is drawn here instead.
+    private func bar(geo: ArcGeometry) -> some View {
+        ZStack {
+            ArcBarShape(geo: geo).fill(Figma.barFill)
+            ArcBarShape(geo: geo).fill(GlassBevel.bar.sheen)
+            ArcBarShape(geo: geo)
+                .stroke(GlassBevel.bar.rim, lineWidth: GlassBevel.bar.rimWidth)
+        }
+    }
+
     /// The selected mood: a glass capsule sitting on the bar.
     ///
-    /// 78.12 x 48.42 against the bar's 70, so it sits inside it rather than
-    /// overhanging — which is what the Figma frame shows.
+    /// Bottom to top: body fill, the bevel's sheen, the lit rim, then the icon.
+    /// `compositingGroup` flattens the stack before the shadow, so the shadow
+    /// is cast by the composed capsule rather than by each layer.
     private func chip(geo: ArcGeometry) -> some View {
-        let u = progress / Double(MoodScale.last)
-        let centre = geo.point(at: CGFloat(u))
-
-        // Bottom to top: body fill, the bevel's sheen, the lit rim, then the
-        // icon. `compositingGroup` flattens the stack before the shadow, so
-        // the shadow is cast by the composed capsule rather than by each layer.
-        return ZStack {
+        ZStack {
             Capsule().fill(Figma.chipFill)
             Capsule().fill(GlassBevel.chip.sheen)
             Capsule().strokeBorder(GlassBevel.chip.rim, lineWidth: GlassBevel.chip.rimWidth)
-            MoodFace(progress: progress, size: Figma.iconSize, color: Figma.iconInk)
+            MoodFace(progress: progress, size: Figma.chipIconSize, color: Figma.iconInk)
         }
-        .frame(width: chipSize.width, height: chipSize.height)
+        .frame(width: Figma.chipSize.width, height: Figma.chipSize.height)
         .compositingGroup()
         .shadow(
             color: Figma.chipShadowColor,
@@ -92,21 +94,20 @@ struct MoodArcBar: View {
             x: 0,
             y: Figma.chipShadowY
         )
-            .scaleEffect(isDragging ? ArcGeometry.pressScale : 1)
-            .position(centre)
+        .scaleEffect(isDragging ? pressScale : 1)
+        .position(geo.point(at: progress))
     }
 
     /// One unselected stop. It fades as the chip arrives, so the chip reads as
     /// picking the stop up rather than parking on top of it.
     private func stop(mood: Mood, geo: ArcGeometry) -> some View {
-        let u = CGFloat(mood.id) / CGFloat(MoodScale.last)
         let distance = abs(progress - Double(mood.id))
         let visible = min(1, max(0, (distance - 0.55) / 0.65))
 
-        return MoodFace(progress: Double(mood.id), size: Figma.iconSize, color: Figma.iconInk)
+        return MoodFace(progress: Double(mood.id), size: Figma.stopIconSize, color: Figma.iconInk)
             .opacity(visible)
-            .scaleEffect(0.8 + 0.2 * visible)
-            .position(geo.point(at: u))
+            .scaleEffect(0.85 + 0.15 * visible)
+            .position(geo.point(at: Double(mood.id)))
             .allowsHitTesting(false)
     }
 
@@ -119,7 +120,7 @@ struct MoodArcBar: View {
         DragGesture(minimumDistance: 0)
             .onChanged { value in
                 isDragging = true
-                progress = Double(geo.u(atX: value.location.x)) * Double(MoodScale.last)
+                progress = geo.index(atX: value.location.x)
             }
             .onEnded { _ in
                 isDragging = false

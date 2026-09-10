@@ -1,5 +1,8 @@
 import SwiftUI
 
+/// Horizontal gutter for the screen's text content.
+private let SPACING_GUTTER: CGFloat = 20
+
 /// The daily check-in.
 ///
 /// Layout follows the Figma mockup: greeting, question, mascot, mood word,
@@ -49,11 +52,11 @@ struct MoodCheckInView: View {
 
                 MoodArcBar(progress: $progress)
                     .padding(.top, 10)
-                    // Escape the stack's gutter: the bar is full-bleed in the
-                    // design, reaching within a couple of points of each edge.
-                    .padding(.horizontal, -20)
+                    // The bar carries its own 5pt side inset, measured from
+                    // the frame, so it has to escape the stack's gutter.
+                    .padding(.horizontal, -SPACING_GUTTER)
             }
-            .padding(.horizontal, 20)
+            .padding(.horizontal, SPACING_GUTTER)
         }
     }
 

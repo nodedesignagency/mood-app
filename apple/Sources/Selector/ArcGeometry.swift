@@ -1,158 +1,147 @@
 import SwiftUI
 
-/// Geometry for the curved mood bar.
+/// Where the bar and its stops sit, measured from the Figma file rather than
+/// derived from a formula.
 ///
-/// The bar is a symmetric quadratic Bézier: it starts and ends at the same
-/// height and arcs in the middle. Because the control point sits exactly
-/// halfway between the endpoints horizontally, the x term collapses to a
-/// straight line:
+/// Node 1:330 ("Frame 2147239328") is 383 × 88.108 at (5, 744) on a 393 × 852
+/// screen, and the five stops inside it are hand-placed:
 ///
-///     x(t) = (1-t)²·x0 + 2t(1-t)·midX + t²·x1  ≡  x0 + (x1 - x0)·t
+///     gaps between stops   63.6, 74.5, 72.7, 66.0     — not evenly spaced
+///     y of each stop       54.9, 41.9, 34.2, 39.4, 48.8
+///     left end vs right    54.9 vs 48.8               — not symmetric
 ///
-/// That is the whole reason for this shape. Finger-x maps to bar position with
-/// one divide — no arc-length table, no Newton iteration per frame — while y
-/// still bends, and evenly spaced stops stay evenly spaced on screen.
-///
-/// Two spans matter, and they are not the same one:
-///
-///   `barInset`    where the drawn bar starts and ends
-///   `travelInset` where the chip and the stops start and end
-///
-/// The chip is wider than the bar's rounded cap, so if the two matched, the
-/// chip at either extreme would hang off the end of the bar. Running the bar
-/// wider than the travel keeps the chip inside it horizontally while still
-/// letting it overhang vertically — which is the whole look.
-struct ArcSpec {
-    /// -1 arcs the middle up, +1 sags it down.
-    var bend: CGFloat = -1
-    /// Rise from the bar's endpoints to its midpoint.
+/// Every earlier version fitted a symmetric quadratic through these. A
+/// symmetric curve cannot represent an asymmetric arc, so it missed each stop
+/// by several points and no amount of tuning its depth or inset could close
+/// the gap. The measured points are the source of truth now, with a spline
+/// running through them.
+enum BarLayout {
+    static let designWidth: CGFloat = 393
+    static let frameWidth: CGFloat = 383
+    static let frameHeight: CGFloat = 88.108
+    /// Gap between the bar and each screen edge.
+    static let sideInset: CGFloat = (designWidth - frameWidth) / 2
+
+    /// Stop centres, in the bar frame's own coordinates.
+    static let stops: [CGPoint] = [
+        CGPoint(x: 52.89, y: 54.89),
+        CGPoint(x: 116.47, y: 41.90),
+        CGPoint(x: 190.96, y: 34.18),
+        CGPoint(x: 263.65, y: 39.36),
+        CGPoint(x: 329.64, y: 48.84),
+    ]
+
+    /// Bar thickness.
     ///
-    /// Measured across the *bar*. Since the travel is inset from the bar's
-    /// ends it only covers the middle of the parabola, so the arch actually
-    /// read is shallower than this. Reference tab bars run 3–5% of their span.
+    /// The frame is 88.108 tall and the curve's own y spans 20.71 of that,
+    /// which leaves 67.4 — so a band of that width centred on the curve fills
+    /// the frame exactly, top and bottom. That the numbers land this neatly is
+    /// the check that the bar really is a constant-thickness arc.
+    static let track: CGFloat = 88.108 - (54.89 - 34.18)
+
+    /// How far past the outer stops the bar reaches, in stop-index units.
     ///
-    /// Measured off the Figma frame: the stops rise ~14.5pt from the outer
-    /// pair to the middle one. The travel is inset from the bar's ends so it
-    /// only covers the middle of the parabola, where the curve is flatter —
-    /// which costs about 13% of the depth, hence 17 rather than 14.5.
-    var depth: CGFloat = 17
-    /// Thickness of the bar. Figma frame measures ~70.
-    var track: CGFloat = 70
-    /// Where the curve's endpoints sit.
-    ///
-    /// NOT where the bar visually ends: the rounded cap extends `track / 2`
-    /// past this. The design leaves ~24pt clear at each side, so with a 70pt
-    /// track the endpoints start 24 + 35 in.
-    var barInset: CGFloat = 59
-    /// Far enough in that the chip stays inside the bar horizontally at either
-    /// extreme — the bar's edge plus half the chip, plus a little room. Leaves
-    /// ~64pt between stops on a 393pt screen, against ~65 in the frame.
-    var travelInset: CGFloat = 68
+    /// The stops span 52.89…329.64 but the bar spans the full 383, so its ends
+    /// carry on past them. 0.30 of a step puts the round caps on the frame's
+    /// left and right edges.
+    static let overhang: Double = 0.30
+
+    static let last = stops.count - 1
 }
 
-/// `ArcSpec` resolved against a concrete width and chip height.
+/// `BarLayout` resolved against a concrete width.
 struct ArcGeometry {
-    let spec: ArcSpec
     let width: CGFloat
-    /// Height of the bar's endpoints within the box.
-    let yEnds: CGFloat
-    /// Total height of the box.
-    let height: CGFloat
+    /// Horizontal scale, for screens wider or narrower than the design's 393.
+    let scale: CGFloat
 
-    /// Vertical breathing room above and below whatever reaches furthest.
-    static let padV: CGFloat = 14
+    var height: CGFloat { BarLayout.frameHeight }
 
-    /// How much the chip grows while a thumb is on it. The box has to allow
-    /// for the grown size, or the chip clips at the extremes when pressed.
-    static let pressScale: CGFloat = 1.08
-
-    /// How far the furthest of bar and chip reaches from the curve.
-    ///
-    /// The chip may be the taller of the two, and it grows while pressed, so
-    /// both are accounted for or the box clips at the extremes.
-    static func reach(spec: ArcSpec, chipHeight: CGFloat) -> CGFloat {
-        max(spec.track, chipHeight * pressScale) / 2
-    }
-
-    /// Box height, which depends only on the shape and the chip — not on width.
-    /// Named apart from the stored `height` so a call site cannot be misread.
-    static func boxHeight(spec: ArcSpec, chipHeight: CGFloat) -> CGFloat {
-        padV * 2 + spec.depth + reach(spec: spec, chipHeight: chipHeight) * 2
-    }
-
-    /// The box is sized by whichever of bar or chip reaches further from the
-    /// curve — the chip may be the taller of the two, and that overhang is
-    /// what makes it read as riding proud of the bar.
-    init(spec: ArcSpec, width: CGFloat, chipHeight: CGFloat) {
-        self.spec = spec
+    init(width: CGFloat) {
         self.width = width
-        // Same helper the frame height uses, so the two cannot drift apart.
-        let reach = Self.reach(spec: spec, chipHeight: chipHeight)
-        // An arch pushes its middle up, so its ends must start lower to stay
-        // in the box; a sag is the mirror image.
-        self.yEnds = Self.padV + reach + (spec.bend < 0 ? spec.depth : 0)
-        self.height = Self.padV * 2 + spec.depth + reach * 2
+        let usable = width - BarLayout.sideInset * 2
+        self.scale = usable > 0 ? usable / BarLayout.frameWidth : 1
     }
 
-    /// Travel position `u` (0…1) → x.
-    func x(at u: CGFloat) -> CGFloat {
-        spec.travelInset + (width - spec.travelInset * 2) * u
+    /// Position at a continuous stop index (0…4), on the spline through the
+    /// measured points. Values outside that range extrapolate along the end
+    /// tangents, which is what draws the bar past its outer stops.
+    func point(at index: Double) -> CGPoint {
+        CGPoint(
+            x: BarLayout.sideInset + Self.spline(BarLayout.stops.map(\.x), at: index) * scale,
+            y: Self.spline(BarLayout.stops.map(\.y), at: index)
+        )
     }
 
-    /// Travel position `u` (0…1) → y, following the bar's own parabola.
-    func y(at u: CGFloat) -> CGFloat {
-        let barSpan = width - spec.barInset * 2
-        guard barSpan > 0 else { return yEnds }
-        // Re-express the travel position along the bar before evaluating, so
-        // stops sit on the drawn centreline rather than on a curve of their own.
-        let t = (x(at: u) - spec.barInset) / barSpan
-        return yEnds + spec.bend * 4 * spec.depth * t * (1 - t)
+    /// Finger x → continuous stop index.
+    ///
+    /// The stops are unevenly spaced, so this walks the measured x values and
+    /// interpolates within the segment the finger is in, rather than dividing
+    /// the width into equal parts.
+    func index(atX px: CGFloat) -> Double {
+        let local = (px - BarLayout.sideInset) / scale
+        let xs = BarLayout.stops.map(\.x)
+        if local <= xs.first! { return 0 }
+        if local >= xs.last! { return Double(BarLayout.last) }
+        for i in 0..<BarLayout.last where local <= xs[i + 1] {
+            let span = xs[i + 1] - xs[i]
+            return Double(i) + Double(span > 0 ? (local - xs[i]) / span : 0)
+        }
+        return Double(BarLayout.last)
     }
 
-    func point(at u: CGFloat) -> CGPoint { CGPoint(x: x(at: u), y: y(at: u)) }
-
-    /// Finger x → travel position `u`, clamped to the ends of the travel.
-    func u(atX px: CGFloat) -> CGFloat {
-        let span = width - spec.travelInset * 2
-        guard span > 0 else { return 0 }
-        return min(1, max(0, (px - spec.travelInset) / span))
+    /// Catmull-Rom through the control points: passes exactly through each one,
+    /// stays smooth across segments, and extrapolates sensibly past the ends.
+    private static func spline(_ values: [CGFloat], at t: Double) -> CGFloat {
+        let last = values.count - 1
+        let i = max(0, min(last - 1, Int(t.rounded(.down))))
+        let u = CGFloat(t - Double(i))
+        func at(_ k: Int) -> CGFloat { values[max(0, min(last, k))] }
+        let p0 = at(i - 1), p1 = at(i), p2 = at(i + 1), p3 = at(i + 2)
+        return 0.5 * ((2 * p1)
+            + (-p0 + p2) * u
+            + (2 * p0 - 5 * p1 + 4 * p2 - p3) * u * u
+            + (-p0 + 3 * p1 - 3 * p2 + p3) * u * u * u)
     }
 }
 
-/// The bar as a fillable outline, so Liquid Glass can be clipped to it.
+/// The bar as a fillable outline.
 ///
-/// A stroked path would be simpler but `glassEffect(in:)` needs a `Shape`, so
-/// the outline is built explicitly: the curve offset up and down by half the
-/// track, closed with semicircular caps.
-///
-/// Offsetting vertically rather than along the normal makes the band's
-/// thickness vary with slope — but the arch is shallow enough that the worst
-/// case (at the endpoints, where slope peaks) costs under 3% of the thickness,
-/// which is invisible and buys a genuinely exact Bézier on both edges.
+/// The spline is sampled, offset up and down by half the track, and closed
+/// with semicircular caps — the same construction as stroking it, but as a
+/// `Shape` so it can be filled, gradient-stroked and clipped.
 struct ArcBarShape: Shape {
     let geo: ArcGeometry
+    /// Samples along the curve. Enough that the offset edges read as smooth.
+    private let steps = 48
 
     func path(in rect: CGRect) -> Path {
-        let r = geo.spec.track / 2
-        let x0 = geo.spec.barInset
-        let x1 = geo.width - geo.spec.barInset
-        let midX = (x0 + x1) / 2
-        // A quadratic reaches only halfway to its control point, so the
-        // control sits at twice the depth to land the midpoint exactly on it.
-        let ctrlY = geo.yEnds + geo.spec.bend * geo.spec.depth * 2
+        let r = BarLayout.track / 2
+        let from = -BarLayout.overhang
+        let to = Double(BarLayout.last) + BarLayout.overhang
+
+        func sample(_ k: Int) -> CGPoint {
+            geo.point(at: from + (to - from) * Double(k) / Double(steps))
+        }
+
+        let start = sample(0)
+        let end = sample(steps)
 
         var p = Path()
-        p.move(to: CGPoint(x: x0, y: geo.yEnds - r))
-        p.addQuadCurve(to: CGPoint(x: x1, y: geo.yEnds - r),
-                       control: CGPoint(x: midX, y: ctrlY - r))
-        // Right cap: sweeping through +x, which is increasing angle in
-        // SwiftUI's y-down space.
-        p.addArc(center: CGPoint(x: x1, y: geo.yEnds), radius: r,
+        p.move(to: CGPoint(x: start.x, y: start.y - r))
+        for k in 1...steps {
+            let s = sample(k)
+            p.addLine(to: CGPoint(x: s.x, y: s.y - r))
+        }
+        // Right cap: through +x, which is increasing angle in y-down space.
+        p.addArc(center: end, radius: r,
                  startAngle: .degrees(-90), endAngle: .degrees(90), clockwise: false)
-        p.addQuadCurve(to: CGPoint(x: x0, y: geo.yEnds + r),
-                       control: CGPoint(x: midX, y: ctrlY + r))
-        // Left cap: sweeping through -x.
-        p.addArc(center: CGPoint(x: x0, y: geo.yEnds), radius: r,
+        for k in stride(from: steps - 1, through: 0, by: -1) {
+            let s = sample(k)
+            p.addLine(to: CGPoint(x: s.x, y: s.y + r))
+        }
+        // Left cap: through -x.
+        p.addArc(center: start, radius: r,
                  startAngle: .degrees(90), endAngle: .degrees(270), clockwise: false)
         p.closeSubpath()
         return p

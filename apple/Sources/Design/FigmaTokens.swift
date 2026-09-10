@@ -39,8 +39,12 @@ enum Figma {
 
     /// From the chip's "Selection colors" swatch.
     static let iconInk = Color(hex: 0x222222)
-    /// Chip height minus its vertical padding: 48.42 − (13.02 × 2).
-    static var iconSize: CGFloat { chipSize.height - chipPaddingV * 2 }
+    /// The selected chip's icon, measured: 22.376 in the file.
+    static let chipIconSize: CGFloat = 22.38
+
+    /// Unselected stops' icons, measured: 26.11, 24.84, 25.09, 26.33 — so they
+    /// are *larger* than the selected one, not smaller.
+    static let stopIconSize: CGFloat = 25.6
 
     // MARK: - Glass
     //
