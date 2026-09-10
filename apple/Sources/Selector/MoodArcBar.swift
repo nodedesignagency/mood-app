@@ -15,7 +15,6 @@ struct MoodArcBar: View {
     var chipSize = Figma.chipSize
 
     @State private var isDragging = false
-    @Namespace private var glassNamespace
 
     /// Nearest stop, recomputed continuously — drives the haptic and the label.
     private var nearest: Int { min(MoodScale.last, max(0, Int(progress.rounded()))) }
@@ -25,23 +24,22 @@ struct MoodArcBar: View {
             let geo = ArcGeometry(spec: spec, width: proxy.size.width, chipHeight: chipSize.height)
 
             ZStack(alignment: .topLeading) {
-                // A shared container lets the chip and the bar sample the same
-                // backdrop and blend into each other as they overlap, instead
-                // of reading as two unrelated pieces of glass.
-                GlassEffectContainer(spacing: 18) {
-                    ZStack(alignment: .topLeading) {
-                        ArcBarShape(geo: geo)
-                            .fill(Figma.barFill)
-                            .glassEffect(.regular, in: ArcBarShape(geo: geo))
-                            .frame(width: geo.width, height: geo.height)
-
-                        chip(geo: geo)
-                    }
-                }
+                // Deliberately NOT in a shared GlassEffectContainer. Its
+                // `spacing` is a merge threshold: glass surfaces closer than
+                // that fuse into one shape. The chip sits directly on the bar,
+                // so grouping them dissolved the chip's edge and swallowed its
+                // icon. They are two distinct surfaces in the design, and two
+                // independent glass effects here.
+                ArcBarShape(geo: geo)
+                    .fill(Figma.barFill)
+                    .glassEffect(.regular, in: ArcBarShape(geo: geo))
+                    .frame(width: geo.width, height: geo.height)
 
                 ForEach(MoodScale.all) { mood in
                     stop(mood: mood, geo: geo)
                 }
+
+                chip(geo: geo)
             }
             .frame(width: geo.width, height: geo.height)
             .contentShape(Rectangle())
@@ -67,32 +65,23 @@ struct MoodArcBar: View {
 
     // MARK: - Pieces
 
-    /// The selected mood: a glass lozenge riding proud of the bar.
+    /// The selected mood: a glass capsule sitting on the bar.
+    ///
+    /// 78.12 x 48.42 against the bar's 70, so it sits inside it rather than
+    /// overhanging — which is what the Figma frame shows.
     private func chip(geo: ArcGeometry) -> some View {
         let u = progress / Double(MoodScale.last)
         let centre = geo.point(at: CGFloat(u))
 
-        return Capsule()
-            .fill(Figma.chipFill)
-            // Size before the glass, so the effect is applied to a capsule of
-            // known dimensions rather than to whatever the parent proposes.
+        // Layered bottom to top: glass, then the 65% white fill, then the
+        // icon. `glassEffect` backs whatever it is applied to, so the icon is
+        // the content and the fill is its background — applying glass to a
+        // filled capsule and overlaying the icon puts them in the wrong order,
+        // which is what left the chip blank.
+        return MoodFace(progress: progress, size: Figma.iconSize, color: Figma.iconInk)
             .frame(width: chipSize.width, height: chipSize.height)
-            .glassEffect(
-                // `.interactive()` is what makes it flex and brighten under a
-                // finger — the "when pressed" frame comes free with it.
-                .regular.interactive(),
-                in: Capsule()
-            )
-            .glassEffectID("chip", in: glassNamespace)
-            // White at 65% over the bar differs from it by about ten levels,
-            // so on its own the chip reads as a smudge. The rim is what gives
-            // it an edge; the shadow is what lifts it off the bar.
-            .overlay {
-                Capsule().strokeBorder(.white.opacity(0.85), lineWidth: 1)
-            }
-            .overlay {
-                MoodFace(progress: progress, size: Figma.iconSize, color: Figma.iconInk)
-            }
+            .background(Capsule().fill(Figma.chipFill))
+            .glassEffect(.regular.interactive(), in: Capsule())
             .shadow(
                 color: Figma.chipShadowColor,
                 radius: Figma.chipShadowRadius,
