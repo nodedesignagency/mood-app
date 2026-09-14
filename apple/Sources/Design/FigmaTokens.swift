@@ -14,6 +14,12 @@ enum Figma {
 
     // MARK: - Bar — layer "Ellipse 4271"
 
+    /// The layer's entire paint: `fill="#E9EDF4" fill-opacity="0.6"`.
+    ///
+    /// Worth stating plainly, because it is the thing that kept getting added
+    /// to: in the exported SVG this layer carries one flat fill and no filter.
+    /// No shadow, no rim, no bevel. Everything else you see on the bar in the
+    /// design is the Glass effect, which the system now draws (see below).
     static let barFill = Color(hex: 0xE9EDF4).opacity(0.60)
 
     // MARK: - Selected chip — layer "Switch Toggle Items [1.0]"
@@ -27,6 +33,10 @@ enum Figma {
     static let chipPaddingV: CGFloat = 13.02
 
     /// Drop shadow: X 0, Y 5.42, Blur 10.85, Spread 0, #1B1C1D @ 5%.
+    ///
+    /// This is the *only* shadow in the bar — it belongs to the chip and
+    /// nothing else. The export agrees: one `filter` in the whole SVG, on this
+    /// layer, its region grown by 10.85 and offset 5.42 down.
     ///
     /// Figma's "Blur" is roughly twice the Gaussian sigma, while SwiftUI's
     /// `radius` is roughly the sigma itself — so the blur is halved on the way
@@ -48,75 +58,29 @@ enum Figma {
 
     // MARK: - Glass
     //
-    // Figma's Glass effect and SwiftUI's `glassEffect` are not the same thing.
+    // Both surfaces use the system's Liquid Glass — `glassEffect(_:in:)`,
+    // iOS 26 — rather than gradients pretending to be it.
     //
-    // `glassEffect` refracts whatever sits behind it. Behind these surfaces is
-    // a near-white bar on an F8F9FC background — there is nothing to refract,
-    // so it renders as near-white and the surface reads as flat. That is the
-    // modifier working correctly, not a tuning problem.
+    // An earlier pass concluded the modifier "renders flat here" and replaced
+    // it with a hand-drawn rim and bevel. The reasoning was that glass
+    // refracts its backdrop and the backdrop here is near-white, so there is
+    // nothing to refract. That much is true, but the conclusion did not
+    // follow: `.regular` draws its own specular rim and highlight whatever
+    // sits behind it, which is the part of the look that was missing. The
+    // imitation, meanwhile, ended in a dark `rimShade` stroke along the
+    // bottom edge — and *that* is what read as a drop shadow the design
+    // never asked for.
     //
-    // Figma's Glass is a stylistic shader: Refraction and Depth draw a lit rim
-    // and an inner bevel regardless of the backdrop. So that look is drawn
-    // explicitly below, from the values in the file:
+    // How the file's Glass settings map onto the modifier:
     //
     //   bar   Light 162°/80%, Refraction 100, Depth 37.97, Dispersion 0,
     //         Frost 0, Splay 0
     //   chip  Light −45°/80%, Refraction 80,  Depth 21.7,  Dispersion 50,
     //         Frost 4.34, Splay 0
     //
-    // Depth maps to rim width and bevel strength; the light angle maps to which
-    // edge is lit. Dispersion (a chromatic fringe) and Splay have no cheap
-    // equivalent and are left out.
-
-    /// Colour the unlit edge is shaded with — the shadow colour from the file.
-    static let rimShade = Color(hex: 0x1B1C1D)
-
-    /// Rim width, scaled from each surface's Depth.
-    static let barRimWidth: CGFloat = 2
-    static let chipRimWidth: CGFloat = 1.5
-}
-
-/// The gradient pair that stands in for one Figma Glass effect.
-///
-/// `lit` is the corner the light comes from, taken from Figma's light angle;
-/// the bevel runs from there to the opposite corner, bright through neutral to
-/// a faint shade.
-struct GlassBevel {
-    var lit: UnitPoint
-    var shaded: UnitPoint
-    var rimWidth: CGFloat
-    /// 0–1, from Figma's light strength.
-    var strength: Double
-
-    /// Bar — Light 162°, Depth 37.97. Lit along its upper edge.
-    static let bar = GlassBevel(lit: .top, shaded: .bottom,
-                                rimWidth: Figma.barRimWidth, strength: 0.8)
-    /// Chip — Light −45°, Depth 21.7. Lit from the upper left.
-    static let chip = GlassBevel(lit: .topLeading, shaded: .bottomTrailing,
-                                 rimWidth: Figma.chipRimWidth, strength: 0.8)
-
-    /// Bright where the light lands, fading to a faint shade opposite.
-    var rim: LinearGradient {
-        LinearGradient(
-            stops: [
-                .init(color: .white.opacity(0.98 * strength), location: 0),
-                .init(color: .white.opacity(0.38 * strength), location: 0.30),
-                .init(color: .clear, location: 0.60),
-                .init(color: Figma.rimShade.opacity(0.14 * strength), location: 1),
-            ],
-            startPoint: lit, endPoint: shaded
-        )
-    }
-
-    /// Inner sheen — the bevel catching light across the lit half.
-    var sheen: LinearGradient {
-        LinearGradient(
-            stops: [
-                .init(color: .white.opacity(0.62 * strength), location: 0),
-                .init(color: .white.opacity(0.14 * strength), location: 0.40),
-                .init(color: .clear, location: 0.72),
-            ],
-            startPoint: lit, endPoint: shaded
-        )
-    }
+    // Light angle, refraction and depth are all things `.regular` decides for
+    // itself from the shape and the ambient environment — there is no knob for
+    // them and there does not need to be. What does carry across is each
+    // layer's fill, which becomes the glass tint: `barFill` and `chipFill`
+    // above. Dispersion and Splay have no equivalent and are left out.
 }

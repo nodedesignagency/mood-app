@@ -6,8 +6,9 @@ import SwiftUI
 /// travels to your thumb, then follows it, and on release it magnetises onto
 /// the nearest mood.
 ///
-/// Positions come from `BarLayout`, measured out of the Figma file. Nothing
-/// here computes where a stop goes.
+/// Positions come from `BarLayout`, measured out of the Figma file, and the
+/// bar's outline from `ArcBarShape`, transcribed from it. Nothing here
+/// computes where anything goes.
 struct MoodArcBar: View {
     /// Continuous position, 0…4. Owned by the screen, driven from here.
     @Binding var progress: Double
@@ -61,41 +62,38 @@ struct MoodArcBar: View {
 
     // MARK: - Pieces
 
-    /// No `glassEffect` on either surface. See the Glass note in FigmaTokens:
-    /// it refracts what sits behind it, and behind these is a near-white bar on
-    /// a near-white background, so it renders flat. Figma's Glass draws a rim
-    /// and bevel regardless of backdrop, so that is drawn here instead.
+    /// The bar: system Liquid Glass in the shape Figma drew, tinted with the
+    /// layer's own fill. That is the whole layer — see the Glass note in
+    /// `FigmaTokens` for why there is no rim, bevel or shadow drawn here.
+    ///
+    /// `glassEffect` puts the glass *behind* its content in the given shape,
+    /// so the content is an empty full-size layer and the shape does the work.
     private func bar(geo: ArcGeometry) -> some View {
-        ZStack {
-            ArcBarShape(geo: geo).fill(Figma.barFill)
-            ArcBarShape(geo: geo).fill(GlassBevel.bar.sheen)
-            ArcBarShape(geo: geo)
-                .stroke(GlassBevel.bar.rim, lineWidth: GlassBevel.bar.rimWidth)
-        }
+        Color.clear
+            .glassEffect(.regular.tint(Figma.barFill), in: ArcBarShape(geo: geo))
     }
 
-    /// The selected mood: a glass capsule sitting on the bar.
+    /// The selected mood: a glass capsule riding on the bar.
     ///
-    /// Bottom to top: body fill, the bevel's sheen, the lit rim, then the icon.
-    /// `compositingGroup` flattens the stack before the shadow, so the shadow
-    /// is cast by the composed capsule rather than by each layer.
+    /// Deliberately *not* in a `GlassEffectContainer` with the bar. A container
+    /// blends the shapes inside it as they approach, and this chip does not
+    /// approach the bar — it sits on top of it, permanently, which unions the
+    /// two into one blob. Kept separate, the chip's glass refracts the bar
+    /// beneath it instead, which is both the look in the file and the one
+    /// place on this screen where there is genuinely something to refract.
     private func chip(geo: ArcGeometry) -> some View {
-        ZStack {
-            Capsule().fill(Figma.chipFill)
-            Capsule().fill(GlassBevel.chip.sheen)
-            Capsule().strokeBorder(GlassBevel.chip.rim, lineWidth: GlassBevel.chip.rimWidth)
-            MoodFace(progress: progress, size: Figma.chipIconSize, color: Figma.iconInk)
-        }
-        .frame(width: Figma.chipSize.width, height: Figma.chipSize.height)
-        .compositingGroup()
-        .shadow(
-            color: Figma.chipShadowColor,
-            radius: Figma.chipShadowRadius,
-            x: 0,
-            y: Figma.chipShadowY
-        )
-        .scaleEffect(isDragging ? pressScale : 1)
-        .position(geo.point(at: progress))
+        MoodFace(progress: progress, size: Figma.chipIconSize, color: Figma.iconInk)
+            .frame(width: Figma.chipSize.width, height: Figma.chipSize.height)
+            .glassEffect(.regular.tint(Figma.chipFill), in: .capsule)
+            // The one shadow the design actually specifies.
+            .shadow(
+                color: Figma.chipShadowColor,
+                radius: Figma.chipShadowRadius,
+                x: 0,
+                y: Figma.chipShadowY
+            )
+            .scaleEffect(isDragging ? pressScale : 1)
+            .position(geo.point(at: progress))
     }
 
     /// One unselected stop. It fades as the chip arrives, so the chip reads as

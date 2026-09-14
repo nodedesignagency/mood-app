@@ -1,28 +1,31 @@
 import SwiftUI
 
-/// Where the bar and its stops sit, measured from the Figma file rather than
-/// derived from a formula.
+/// Where the bar and its stops sit, transcribed from the Figma file.
 ///
 /// Node 1:330 ("Frame 2147239328") is 383 × 88.108 at (5, 744) on a 393 × 852
-/// screen, and the five stops inside it are hand-placed:
+/// screen. Two different things are measured out of it, and they are *not* the
+/// same curve:
 ///
-///     gaps between stops   63.6, 74.5, 72.7, 66.0     — not evenly spaced
-///     y of each stop       54.9, 41.9, 34.2, 39.4, 48.8
-///     left end vs right    54.9 vs 48.8               — not symmetric
+///   `ArcBarShape`   the bar's own outline, node 1:331 ("Ellipse 4271")
+///   `stops`         the five icon centres, hand-placed by the designer
 ///
-/// Every earlier version fitted a symmetric quadratic through these. A
-/// symmetric curve cannot represent an asymmetric arc, so it missed each stop
-/// by several points and no amount of tuning its depth or inset could close
-/// the gap. The measured points are the source of truth now, with a spline
-/// running through them.
+/// Every earlier version drew the bar by stroking a curve fitted through the
+/// stops. The stops are not on the bar's centreline — stop 0 sits 6.15pt below
+/// it — so that fit came out the wrong shape *and* 9pt too thick (67.4 against
+/// the real 58.5). The bar now comes from its own path and the stops from
+/// their own measurements, which is the only way both can be right at once.
 enum BarLayout {
     static let designWidth: CGFloat = 393
     static let frameWidth: CGFloat = 383
     static let frameHeight: CGFloat = 88.108
-    /// Gap between the bar and each screen edge.
+    /// Gap between the bar frame and each screen edge.
     static let sideInset: CGFloat = (designWidth - frameWidth) / 2
 
     /// Stop centres, in the bar frame's own coordinates.
+    ///
+    /// Unevenly spaced (gaps of 63.6, 74.5, 72.7, 66.0) and not symmetric
+    /// top to bottom (54.89 at the left end against 48.84 at the right).
+    /// That is the designer's hand, not noise, so it is preserved exactly.
     static let stops: [CGPoint] = [
         CGPoint(x: 52.89, y: 54.89),
         CGPoint(x: 116.47, y: 41.90),
@@ -30,21 +33,6 @@ enum BarLayout {
         CGPoint(x: 263.65, y: 39.36),
         CGPoint(x: 329.64, y: 48.84),
     ]
-
-    /// Bar thickness.
-    ///
-    /// The frame is 88.108 tall and the curve's own y spans 20.71 of that,
-    /// which leaves 67.4 — so a band of that width centred on the curve fills
-    /// the frame exactly, top and bottom. That the numbers land this neatly is
-    /// the check that the bar really is a constant-thickness arc.
-    static let track: CGFloat = 88.108 - (54.89 - 34.18)
-
-    /// How far past the outer stops the bar reaches, in stop-index units.
-    ///
-    /// The stops span 52.89…329.64 but the bar spans the full 383, so its ends
-    /// carry on past them. 0.30 of a step puts the round caps on the frame's
-    /// left and right edges.
-    static let overhang: Double = 0.30
 
     static let last = stops.count - 1
 }
@@ -63,13 +51,26 @@ struct ArcGeometry {
         self.scale = usable > 0 ? usable / BarLayout.frameWidth : 1
     }
 
+    /// A point in the Figma frame's coordinates → this view's coordinates.
+    ///
+    /// Only x is scaled. Stretching y as well would thin the bar and flatten
+    /// its caps on a narrow screen; leaving it alone keeps the band a constant
+    /// 58.5pt everywhere and lets the arc shallow out instead, which is the
+    /// failure mode you would choose.
+    func map(_ x: CGFloat, _ y: CGFloat) -> CGPoint {
+        CGPoint(x: BarLayout.sideInset + x * scale, y: y)
+    }
+
     /// Position at a continuous stop index (0…4), on the spline through the
-    /// measured points. Values outside that range extrapolate along the end
-    /// tangents, which is what draws the bar past its outer stops.
+    /// measured stop centres.
+    ///
+    /// This is deliberately the stop curve and not the bar's centreline: when
+    /// the chip settles it must land exactly where the designer put that icon,
+    /// even where the two curves diverge.
     func point(at index: Double) -> CGPoint {
-        CGPoint(
-            x: BarLayout.sideInset + Self.spline(BarLayout.stops.map(\.x), at: index) * scale,
-            y: Self.spline(BarLayout.stops.map(\.y), at: index)
+        map(
+            Self.spline(BarLayout.stops.map(\.x), at: index),
+            Self.spline(BarLayout.stops.map(\.y), at: index)
         )
     }
 
@@ -105,44 +106,48 @@ struct ArcGeometry {
     }
 }
 
-/// The bar as a fillable outline.
+/// The bar's outline, transcribed from Figma's `Ellipse 4271`.
 ///
-/// The spline is sampled, offset up and down by half the track, and closed
-/// with semicircular caps — the same construction as stroking it, but as a
-/// `Shape` so it can be filled, gradient-stroked and clipped.
+/// Seven cubic segments, copied off the exported path rather than derived from
+/// anything. They describe a band of constant 58.52pt thickness whose
+/// centreline runs from (41.05, 51.32) to (342.61, 51.82) and rises to 34.34
+/// at the middle — a 17pt rise over a 301.6pt span, about 5.6%. Nothing here
+/// needs to know that; it is recorded because it is the check that these
+/// numbers really are an arc with round caps, and it is what to re-measure
+/// against if the design moves.
+///
+/// Reading the path: it opens at the right cap, runs the *top* edge right to
+/// left, rounds the left cap, runs the *bottom* edge back left to right, and
+/// closes through the right cap.
 struct ArcBarShape: Shape {
     let geo: ArcGeometry
-    /// Samples along the curve. Enough that the offset edges read as smooth.
-    private let steps = 48
 
     func path(in rect: CGRect) -> Path {
-        let r = BarLayout.track / 2
-        let from = -BarLayout.overhang
-        let to = Double(BarLayout.last) + BarLayout.overhang
-
-        func sample(_ k: Int) -> CGPoint {
-            geo.point(at: from + (to - from) * Double(k) / Double(steps))
-        }
-
-        let start = sample(0)
-        let end = sample(steps)
-
         var p = Path()
-        p.move(to: CGPoint(x: start.x, y: start.y - r))
-        for k in 1...steps {
-            let s = sample(k)
-            p.addLine(to: CGPoint(x: s.x, y: s.y - r))
-        }
-        // Right cap: through +x, which is increasing angle in y-down space.
-        p.addArc(center: end, radius: r,
-                 startAngle: .degrees(-90), endAngle: .degrees(90), clockwise: false)
-        for k in stride(from: steps - 1, through: 0, by: -1) {
-            let s = sample(k)
-            p.addLine(to: CGPoint(x: s.x, y: s.y + r))
-        }
-        // Left cap: through -x.
-        p.addArc(center: start, radius: r,
-                 startAngle: .degrees(90), endAngle: .degrees(270), clockwise: false)
+        p.move(to: geo.map(370.929, 59.0768))
+        // Right cap, upper half.
+        p.addCurve(to: geo.map(350.499, 23.6375),
+                   control1: geo.map(375.281, 43.5294),
+                   control2: geo.map(366.215, 27.3343))
+        // Top edge.
+        p.addCurve(to: geo.map(33.2586, 23.1123),
+                   control1: geo.map(246.199, -0.89632),
+                   control2: geo.map(137.639, -1.07601))
+        // Left cap.
+        p.addCurve(to: geo.map(12.7114, 58.4838),
+                   control1: geo.map(17.5304, 26.7571),
+                   control2: geo.map(8.41111, 42.922))
+        p.addCurve(to: geo.map(48.8445, 79.5208),
+                   control1: geo.map(17.0117, 74.0455),
+                   control2: geo.map(33.1024, 83.1052))
+        // Bottom edge.
+        p.addCurve(to: geo.map(334.726, 79.9941),
+                   control1: geo.map(142.949, 58.0935),
+                   control2: geo.map(240.694, 58.2554))
+        // Right cap, lower half.
+        p.addCurve(to: geo.map(370.929, 59.0768),
+                   control1: geo.map(350.456, 83.6307),
+                   control2: geo.map(366.577, 74.6242))
         p.closeSubpath()
         return p
     }
