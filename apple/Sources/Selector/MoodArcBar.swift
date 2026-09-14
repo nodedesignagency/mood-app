@@ -62,38 +62,53 @@ struct MoodArcBar: View {
 
     // MARK: - Pieces
 
-    /// The bar: system Liquid Glass in the shape Figma drew, tinted with the
-    /// layer's own fill. That is the whole layer — see the Glass note in
-    /// `FigmaTokens` for why there is no rim, bevel or shadow drawn here.
+    /// The bar: Figma's Glass, drawn explicitly. No shadow — the file has none
+    /// on this layer, and `FigmaGlass` explains why the system effect cannot
+    /// give us one without it.
     ///
-    /// `glassEffect` puts the glass *behind* its content in the given shape,
-    /// so the content is an empty full-size layer and the shape does the work.
+    /// The stroke is laid down at twice the rim width and clipped back to the
+    /// shape, which leaves exactly the inner half. `strokeBorder` would say
+    /// this more directly, but it needs an `InsettableShape`, and insetting a
+    /// freehand bezier means offsetting every curve — not worth it for a band
+    /// a few points wide.
     private func bar(geo: ArcGeometry) -> some View {
-        Color.clear
-            .glassEffect(.regular.tint(Figma.barFill), in: ArcBarShape(geo: geo))
+        let shape = ArcBarShape(geo: geo)
+        let glass = FigmaGlass.bar
+
+        return ZStack {
+            shape.fill(Figma.barFill)
+            shape.fill(glass.sheen)
+            shape
+                .stroke(glass.rim, lineWidth: glass.rimWidth * 2)
+                .clipShape(shape)
+        }
     }
 
     /// The selected mood: a glass capsule riding on the bar.
     ///
-    /// Deliberately *not* in a `GlassEffectContainer` with the bar. A container
-    /// blends the shapes inside it as they approach, and this chip does not
-    /// approach the bar — it sits on top of it, permanently, which unions the
-    /// two into one blob. Kept separate, the chip's glass refracts the bar
-    /// beneath it instead, which is both the look in the file and the one
-    /// place on this screen where there is genuinely something to refract.
+    /// `Capsule` is insettable, so the rim can say `strokeBorder` outright.
+    /// `compositingGroup` flattens the stack before the shadow, so the shadow
+    /// is cast by the composed capsule rather than by each layer in turn.
     private func chip(geo: ArcGeometry) -> some View {
-        MoodFace(progress: progress, size: Figma.chipIconSize, color: Figma.iconInk)
-            .frame(width: Figma.chipSize.width, height: Figma.chipSize.height)
-            .glassEffect(.regular.tint(Figma.chipFill), in: .capsule)
-            // The one shadow the design actually specifies.
-            .shadow(
-                color: Figma.chipShadowColor,
-                radius: Figma.chipShadowRadius,
-                x: 0,
-                y: Figma.chipShadowY
-            )
-            .scaleEffect(isDragging ? pressScale : 1)
-            .position(geo.point(at: progress))
+        let glass = FigmaGlass.chip
+
+        return ZStack {
+            Capsule().fill(Figma.chipFill)
+            Capsule().fill(glass.sheen)
+            Capsule().strokeBorder(glass.rim, lineWidth: glass.rimWidth)
+            MoodFace(progress: progress, size: Figma.chipIconSize, color: Figma.iconInk)
+        }
+        .frame(width: Figma.chipSize.width, height: Figma.chipSize.height)
+        .compositingGroup()
+        // The one shadow the design actually specifies.
+        .shadow(
+            color: Figma.chipShadowColor,
+            radius: Figma.chipShadowRadius,
+            x: 0,
+            y: Figma.chipShadowY
+        )
+        .scaleEffect(isDragging ? pressScale : 1)
+        .position(geo.point(at: progress))
     }
 
     /// One unselected stop. It fades as the chip arrives, so the chip reads as

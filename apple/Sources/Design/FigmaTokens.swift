@@ -58,29 +58,104 @@ enum Figma {
 
     // MARK: - Glass
     //
-    // Both surfaces use the system's Liquid Glass — `glassEffect(_:in:)`,
-    // iOS 26 — rather than gradients pretending to be it.
-    //
-    // An earlier pass concluded the modifier "renders flat here" and replaced
-    // it with a hand-drawn rim and bevel. The reasoning was that glass
-    // refracts its backdrop and the backdrop here is near-white, so there is
-    // nothing to refract. That much is true, but the conclusion did not
-    // follow: `.regular` draws its own specular rim and highlight whatever
-    // sits behind it, which is the part of the look that was missing. The
-    // imitation, meanwhile, ended in a dark `rimShade` stroke along the
-    // bottom edge — and *that* is what read as a drop shadow the design
-    // never asked for.
-    //
-    // How the file's Glass settings map onto the modifier:
-    //
-    //   bar   Light 162°/80%, Refraction 100, Depth 37.97, Dispersion 0,
-    //         Frost 0, Splay 0
-    //   chip  Light −45°/80%, Refraction 80,  Depth 21.7,  Dispersion 50,
-    //         Frost 4.34, Splay 0
-    //
-    // Light angle, refraction and depth are all things `.regular` decides for
-    // itself from the shape and the ambient environment — there is no knob for
-    // them and there does not need to be. What does carry across is each
-    // layer's fill, which becomes the glass tint: `barFill` and `chipFill`
-    // above. Dispersion and Splay have no equivalent and are left out.
+    // Figma's Glass and SwiftUI's `glassEffect` share a name and do opposite
+    // things, so this is drawn by hand — see `FigmaGlass` below for the how
+    // and the why.
+
+    /// Rim width, scaled from each surface's Figma Depth.
+    ///
+    /// Depth is the thickness of the glass slab. There is no published formula
+    /// from slab depth to the width of the refracted band you see face-on, so
+    /// this divisor is fitted by eye against the Figma render. What it does
+    /// preserve is the *ratio* between the two surfaces — 37.97 / 21.7 = 1.75,
+    /// and 3.0 / 1.7 = 1.76 — so the bar reads as the thicker glass of the two,
+    /// which is the part that carries the look.
+    static let depthToRim: CGFloat = 12.7
+}
+
+/// Figma's Glass effect, drawn explicitly.
+///
+/// ## Why not `glassEffect`
+///
+/// Apple's Liquid Glass samples the pixels behind a view and refracts them.
+/// Behind this bar is a flat #F8F9FC page, and refracting a flat colour
+/// returns the same flat colour — there is nothing to bend, so nothing shows.
+/// It also always draws an elevation shadow, and the whole `Glass` type is
+/// `.regular` / `.clear` / `.identity` plus `tint` and `interactive`: there is
+/// no knob to turn that off. The bar in the file has no shadow, so the system
+/// effect cannot match it. Not a tuning problem — the wrong tool.
+///
+/// Figma's Glass is a stylistic shader instead: Refraction and Depth draw a
+/// lens ring and an inner bevel from the shape's own outline, which is why it
+/// reads as glass on a blank canvas. That is what is reproduced here.
+///
+/// ## The two rules that matter
+///
+/// An earlier attempt at this produced the shadow it was meant to avoid, for
+/// two reasons worth stating so they are not repeated:
+///
+/// 1. **Everything stays inside the shape.** It used `stroke`, which centres
+///    the line on the outline and leaves half of it outside. Outside the
+///    silhouette is where shadows live. Strokes here are drawn at twice the
+///    width and clipped back to the shape, which leaves exactly the inner
+///    half — or `strokeBorder`, where the shape is insettable.
+///
+/// 2. **Nothing is darker than the fill.** It ended its rim in #1B1C1D at 14%
+///    along the bottom edge, which is a drop shadow with extra steps. A thick
+///    glass slab on a light ground scatters light out through its edges, so
+///    they go *brighter* than the body, never darker. Every stop below is
+///    white.
+struct FigmaGlass {
+    /// The corner the light comes from, from Figma's light angle.
+    var lit: UnitPoint
+    /// The opposite corner. The bevel runs between the two.
+    var shaded: UnitPoint
+    /// Figma's Depth for this surface.
+    var depth: CGFloat
+    /// 0–1, from Figma's light strength.
+    var strength: Double
+
+    var rimWidth: CGFloat { depth / Figma.depthToRim }
+
+    /// Bar — Light 162°, Depth 37.97, Refraction 100, Frost 0, Dispersion 0.
+    /// Lit along its upper edge.
+    static let bar = FigmaGlass(lit: .top, shaded: .bottom, depth: 37.97, strength: 0.8)
+
+    /// Chip — Light −45°, Depth 21.7, Refraction 80, Frost 4.34, Dispersion 50.
+    /// Lit from the upper left.
+    ///
+    /// Frost is a backdrop blur; behind the chip is the bar, which is itself
+    /// near-flat, so blurring it would change almost nothing and is left out.
+    /// Dispersion is a chromatic fringe with no cheap equivalent, also left out.
+    static let chip = FigmaGlass(lit: .topLeading, shaded: .bottomTrailing, depth: 21.7, strength: 0.8)
+
+    /// The lit edge, hugging the inside of the outline.
+    ///
+    /// Bright where the light lands, falling away, then lifting again at the
+    /// far edge — light that entered the slab leaving through the opposite
+    /// side. That second lift is what separates thick glass from a painted
+    /// highlight, and it is why the bar gets a wider rim than the chip.
+    var rim: LinearGradient {
+        LinearGradient(
+            stops: [
+                .init(color: .white.opacity(0.95 * strength), location: 0.00),
+                .init(color: .white.opacity(0.55 * strength), location: 0.28),
+                .init(color: .white.opacity(0.18 * strength), location: 0.62),
+                .init(color: .white.opacity(0.45 * strength), location: 1.00),
+            ],
+            startPoint: lit, endPoint: shaded
+        )
+    }
+
+    /// Inner sheen — the body of the slab catching light across its lit half.
+    var sheen: LinearGradient {
+        LinearGradient(
+            stops: [
+                .init(color: .white.opacity(0.40 * strength), location: 0.00),
+                .init(color: .white.opacity(0.10 * strength), location: 0.42),
+                .init(color: .clear, location: 0.78),
+            ],
+            startPoint: lit, endPoint: shaded
+        )
+    }
 }
