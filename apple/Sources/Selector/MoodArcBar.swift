@@ -6,6 +6,11 @@ import SwiftUI
 /// travels to your thumb, then follows it, and on release it magnetises onto
 /// the nearest mood.
 ///
+/// The chip is real Liquid Glass. Under a thumb it swells to the file's
+/// pressed size, the stop icons refract through it as it passes over them,
+/// and it settles with a spring — the same behaviour as the system's own
+/// segmented control, which is what the design is modelled on.
+///
 /// Positions come from `BarLayout`, measured out of the Figma file, and the
 /// bar's outline from `ArcBarShape`, transcribed from it. Nothing here
 /// computes where anything goes.
@@ -16,9 +21,6 @@ struct MoodArcBar: View {
     var onSettle: (Int) -> Void = { _ in }
 
     @State private var isDragging = false
-
-    /// How much the chip grows while a thumb is on it.
-    private let pressScale: CGFloat = 1.06
 
     /// Nearest stop, recomputed continuously — drives the haptic and the label.
     private var nearest: Int {
@@ -32,6 +34,8 @@ struct MoodArcBar: View {
             ZStack(alignment: .topLeading) {
                 bar(geo: geo)
 
+                // Drawn before the chip so they sit beneath its glass, which
+                // is what makes them bend as it slides over them.
                 ForEach(MoodScale.all) { mood in
                     stop(mood: mood, geo: geo)
                 }
@@ -62,53 +66,45 @@ struct MoodArcBar: View {
 
     // MARK: - Pieces
 
-    /// The bar: the layer's flat fill and nothing else.
-    ///
-    /// The file puts a Glass effect on it too, but on a 58pt band that is only
-    /// ~10 levels off the page behind it there is no room for a highlight: any
-    /// edge bright enough to read merges with the background and eats the
-    /// silhouette, and any edge dim enough to keep the silhouette is invisible
-    /// up close. Flat is what the file *looks* like at this size.
+    /// The bar: the layer's flat fill. See `Figma.barFill` for why nothing
+    /// more is drawn on it.
     private func bar(geo: ArcGeometry) -> some View {
         ArcBarShape(geo: geo).fill(Figma.barFill)
     }
 
-    /// The selected mood: a glass capsule riding on the bar.
+    /// The selected mood: a capsule of Liquid Glass riding on the bar.
     ///
-    /// `Capsule` is insettable, so the rim can say `strokeBorder` outright.
-    /// `compositingGroup` flattens the stack before the shadow, so the shadow
-    /// is cast by the composed capsule rather than by each layer in turn.
+    /// The glass follows the view's frame, so animating the frame between
+    /// the resting and pressed sizes is the swell — no scale transform, which
+    /// would also scale the rim and the shadow. `.interactive()` lets the
+    /// glass itself respond to the touch as well.
+    ///
+    /// No shadow is added: the effect casts its own. The stop beneath is
+    /// faded out (see `stop`) so the chip's icon is the only one showing at
+    /// rest; while sliding, the neighbours come through the glass.
     private func chip(geo: ArcGeometry) -> some View {
-        let glass = FigmaGlass.chip
+        let size = isDragging ? Figma.chipPressedSize : Figma.chipSize
+        let icon = isDragging ? Figma.chipPressedIconSize : Figma.chipIconSize
 
-        return ZStack {
-            Capsule().fill(Figma.chipFill)
-            Capsule().fill(glass.sheen)
-            Capsule().strokeBorder(glass.rim, lineWidth: glass.rimWidth)
-            MoodFace(progress: progress, size: Figma.chipIconSize, color: Figma.iconInk)
-        }
-        .frame(width: Figma.chipSize.width, height: Figma.chipSize.height)
-        .compositingGroup()
-        // The one shadow the design actually specifies.
-        .shadow(
-            color: Figma.chipShadowColor,
-            radius: Figma.chipShadowRadius,
-            x: 0,
-            y: Figma.chipShadowY
-        )
-        .scaleEffect(isDragging ? pressScale : 1)
-        .position(geo.point(at: progress))
+        return MoodFace(progress: progress, size: icon, color: Figma.iconInk)
+            .frame(width: size.width, height: size.height)
+            .glassEffect(.regular.interactive(), in: .capsule)
+            .animation(.spring(response: 0.28, dampingFraction: 0.72), value: isDragging)
+            .position(geo.point(at: progress))
     }
 
-    /// One unselected stop. It fades as the chip arrives, so the chip reads as
-    /// picking the stop up rather than parking on top of it.
+    /// One unselected stop.
+    ///
+    /// Hidden only while the chip is nearly on top of it — otherwise its icon
+    /// and the chip's would double up. The window is narrow on purpose: a
+    /// stop should be visible, and refracting through the glass, for as much
+    /// of the chip's approach as possible.
     private func stop(mood: Mood, geo: ArcGeometry) -> some View {
         let distance = abs(progress - Double(mood.id))
-        let visible = min(1, max(0, (distance - 0.55) / 0.65))
+        let visible = min(1, max(0, (distance - 0.25) / 0.35))
 
         return MoodFace(progress: Double(mood.id), size: Figma.stopIconSize, color: Figma.iconInk)
             .opacity(visible)
-            .scaleEffect(0.85 + 0.15 * visible)
             .position(geo.point(at: Double(mood.id)))
             .allowsHitTesting(false)
     }
