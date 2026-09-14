@@ -102,15 +102,16 @@ enum Figma {
 
     /// At rest — the "Active state" frame.
     static let chipSize = CGSize(width: 78.12, height: 48.42)
-    /// The selected chip's icon, measured: 22.376 in the file.
-    static let chipIconSize: CGFloat = 22.38
 
     /// Under a thumb — the "When pressed" frame, node 1:384.
     ///
-    /// Not a uniform scale of the resting chip: 1.20× wide by 1.36× tall,
-    /// with the icon at 1.53×. The centre stays put, so it grows in place.
+    /// Not a uniform scale of the resting chip: 1.20× wide by 1.36× tall.
+    /// The centre stays put, so it grows in place.
+    ///
+    /// The file draws an icon inside the chip (22.38 at rest, 34.2 pressed).
+    /// The app does not: the chip is a lens over the bar's own faces, so the
+    /// face under it is the stop's, at the stop's size, and does not grow.
     static let chipPressedSize = CGSize(width: 94, height: 66)
-    static let chipPressedIconSize: CGFloat = 34.2
 
     // MARK: - Continue — layer "Frame 2147239336"
 

@@ -6,9 +6,12 @@ import SwiftUI
 /// travels to your thumb, then follows it, and on release it magnetises onto
 /// the nearest mood.
 ///
-/// The chip is a refracting lens (see `LensCanvas`). Under a thumb it swells
-/// to the file's pressed size, the stop icons bend and fringe through its
-/// edge as it passes over them, and it settles with a spring.
+/// The chip is a refracting lens (see `LensCanvas`) and nothing more: it
+/// carries no icon of its own. The five faces stay where they are in the bar,
+/// always visible, and the one you see "in" the chip is the stop beneath it,
+/// seen through the glass — the same as the system's segmented control, where
+/// the labels stay put and the glass slides over them. Under a thumb only
+/// the frame swells; the face under it does not move or grow.
 ///
 /// Positions come from `BarLayout`, measured out of the Figma file, and the
 /// bar's outline from `ArcBarShape`, transcribed from it. Nothing here
@@ -27,7 +30,6 @@ struct MoodArcBar: View {
     }
 
     private var chipSize: CGSize { isDragging ? Figma.chipPressedSize : Figma.chipSize }
-    private var chipIconSize: CGFloat { isDragging ? Figma.chipPressedIconSize : Figma.chipIconSize }
 
     var body: some View {
         GeometryReader { proxy in
@@ -38,28 +40,20 @@ struct MoodArcBar: View {
             // there pokes out of the bar's lower edge.
             let chipAngle = geo.angle(at: progress)
 
+            // Everything in here is what the lens refracts. Order matters:
+            // the chip's translucent body goes *under* the faces, so the face
+            // beneath the chip stays fully dark instead of being washed by
+            // 65% white, and the lens on top bends whatever crosses its edge.
             ZStack(alignment: .topLeading) {
-                // Everything in here is what the lens refracts: the bar, the
-                // stops, and the chip's own translucent body — so the stops
-                // bend through the chip's edge as it slides over them.
-                ZStack(alignment: .topLeading) {
-                    bar(geo: geo)
+                bar(geo: geo)
 
-                    ForEach(MoodScale.all) { mood in
-                        stop(mood: mood, geo: geo)
-                    }
+                chipBody(at: chipCenter, angle: chipAngle)
 
-                    chipBody(at: chipCenter, angle: chipAngle)
+                ForEach(MoodScale.all) { mood in
+                    stop(mood: mood, geo: geo)
                 }
-                .lensCanvas(center: chipCenter, size: chipSize, rotation: chipAngle, config: Figma.chipGlass)
-
-                // Above the lens, so it stays crisp while everything under
-                // it bends.
-                MoodFace(progress: progress, size: chipIconSize, color: Figma.iconInk)
-                    .rotationEffect(chipAngle)
-                    .position(chipCenter)
-                    .allowsHitTesting(false)
             }
+            .lensCanvas(center: chipCenter, size: chipSize, rotation: chipAngle, config: Figma.chipGlass)
             .frame(width: proxy.size.width, height: geo.height)
             .contentShape(Rectangle())
             .gesture(drag(geo: geo))
@@ -93,8 +87,8 @@ struct MoodArcBar: View {
     }
 
     /// The chip's body: the file's 65% white and its drop shadow. It sits in
-    /// the refracted layer, exactly under the lens, so the glass edge the
-    /// shader draws lands on its silhouette.
+    /// the refracted layer, under the faces and exactly under the lens, so
+    /// the glass edge the shader draws lands on its silhouette.
     private func chipBody(at center: CGPoint, angle: Angle) -> some View {
         Capsule()
             .fill(Figma.chipFill)
@@ -106,18 +100,10 @@ struct MoodArcBar: View {
             .position(center)
     }
 
-    /// One unselected stop.
-    ///
-    /// Hidden only while the chip is nearly on top of it — otherwise its icon
-    /// and the chip's would double up. The window is narrow on purpose: a
-    /// stop should be visible, and bending through the lens, for as much of
-    /// the chip's approach as possible.
+    /// One stop. Always visible: the chip never hides or replaces a face, it
+    /// slides over it.
     private func stop(mood: Mood, geo: ArcGeometry) -> some View {
-        let distance = abs(progress - Double(mood.id))
-        let visible = min(1, max(0, (distance - 0.25) / 0.35))
-
-        return MoodFace(progress: Double(mood.id), size: Figma.stopIconSize, color: Figma.iconInk)
-            .opacity(visible)
+        MoodFace(progress: Double(mood.id), size: Figma.stopIconSize, color: Figma.iconInk)
             .position(geo.point(at: Double(mood.id)))
     }
 
