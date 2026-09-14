@@ -3,6 +3,21 @@
 using namespace metal;
 
 // =============================================================================
+// MODIFIED FROM UPSTREAM (sqoder/LiquidGlassKit) — see Vendor/LiquidGlassKit/README.md
+//
+// Upstream draws its edge for dark glass over photos: a 3.5pt-wide Fresnel
+// band and a tight pow-18 specular blob. Over a near-white page that reads as
+// a fat white ring with a hot spot. The design's glass edge is a ~1px rim, a
+// broad soft light on the lit side, and a faint darkening on the far side.
+// Both shader functions below draw that instead, in the same parameter slots:
+//
+//   fresnel   brightness of a 1.5pt hairline (was: of a 3.5pt band)
+//   specular  amount of broad soft light over the edge band (was: blob)
+//   counter-rim darkening 0.10 · edge², quadratic (was: 0.14 · edge)
+//
+// The refraction, tangential shear and 6-tap dispersion are unchanged. The
+// numbers were tuned in a NumPy port of this function against the Figma file.
+// =============================================================================
 // LiquidGlassLens.metal
 // Universal Liquid Glass & Lens Refraction Metal Shader for SwiftUI
 //
@@ -121,21 +136,23 @@ static float sdContinuousBox(float2 p, float2 b, float r, float n) {
     col.g /= half(sumG);
     col.b /= half(sumB);
 
-    // 5. Specular Arc & Crisp Fresnel Hairline
-    // Directional light vector
+    // Edge lighting (modified — see header).
     float2 L = normalize(float2(cos(lightAngle), sin(lightAngle)));
-    float dotNL = max(dot(normalDir, -L), 0.0);
-    float arcWindow = exp(-pow((edge - 0.22) / 0.18, 2.0));
-    half specLobe = half(pow(dotNL, 18.0) * arcWindow * specular);
+    // 1 on the edge facing the light, 0 on the edge facing away.
+    float lit = max(dot(normalDir, -L), 0.0);
+    // Broad soft light: strongest at the silhouette on the lit side, present
+    // all the way round, falling off quadratically over the edge band.
+    float soft = (0.35 + 0.65 * lit) * edge * edge * specular;
+    // Crisp 1.5pt hairline, brighter on the lit side.
+    float hs = clamp(inside / 1.5, 0.0, 1.0);
+    float hairline = (1.0 - hs * hs * (3.0 - 2.0 * hs)) * fresnel * (0.55 + 0.45 * lit);
+    // Faint darkening on the far side, inside the outline.
+    float counterRim = max(dot(normalDir, L), 0.0) * edge * edge * 0.10;
 
-    // Crisp white Fresnel silhouette contour (~3.5px outer hairline)
-    half hairline = half((1.0 - smoothstep(0.0, 3.5, inside)) * fresnel * 0.95);
-
-    // Counter-rim shadow on shadow side for legibility over light content
-    float counterRim = max(dot(normalDir, L), 0.0) * edge * 0.14;
-
-    col.rgb += half3(specLobe + hairline);
-    col.rgb = max(col.rgb - half3(counterRim * col.a), half3(0.0));
+    // Light is added in proportion to coverage, so it never paints over
+    // transparent backdrop.
+    col.rgb += half3(half(soft + hairline)) * col.a;
+    col.rgb = max(col.rgb - half3(half(counterRim) * col.a), half3(0.0));
 
     // Smooth edge alpha antialiasing
     float coverage = clamp(inside + 0.5, 0.0, 1.0);
@@ -230,16 +247,23 @@ static float sdContinuousBox(float2 p, float2 b, float r, float n) {
     col.g /= half(sumG);
     col.b /= half(sumB);
 
-    // Specular Arc & Crisp Fresnel Hairline
+    // Edge lighting (modified — see header).
     float2 L = normalize(float2(cos(lightAngle), sin(lightAngle)));
-    float dotNL = max(dot(normalDir, -L), 0.0);
-    float arcWindow = exp(-pow((edge - 0.22) / 0.18, 2.0));
-    half specLobe = half(pow(dotNL, 18.0) * arcWindow * specular);
-    half hairline = half((1.0 - smoothstep(0.0, 3.5, inside)) * fresnel * 0.95);
-    float counterRim = max(dot(normalDir, L), 0.0) * edge * 0.14;
+    // 1 on the edge facing the light, 0 on the edge facing away.
+    float lit = max(dot(normalDir, -L), 0.0);
+    // Broad soft light: strongest at the silhouette on the lit side, present
+    // all the way round, falling off quadratically over the edge band.
+    float soft = (0.35 + 0.65 * lit) * edge * edge * specular;
+    // Crisp 1.5pt hairline, brighter on the lit side.
+    float hs = clamp(inside / 1.5, 0.0, 1.0);
+    float hairline = (1.0 - hs * hs * (3.0 - 2.0 * hs)) * fresnel * (0.55 + 0.45 * lit);
+    // Faint darkening on the far side, inside the outline.
+    float counterRim = max(dot(normalDir, L), 0.0) * edge * edge * 0.10;
 
-    col.rgb += half3(specLobe + hairline);
-    col.rgb = max(col.rgb - half3(counterRim * col.a), half3(0.0));
+    // Light is added in proportion to coverage, so it never paints over
+    // transparent backdrop.
+    col.rgb += half3(half(soft + hairline)) * col.a;
+    col.rgb = max(col.rgb - half3(half(counterRim) * col.a), half3(0.0));
 
     float coverage = clamp(inside + 0.5, 0.0, 1.0);
     return mix(layer.sample(position), col, half(coverage));

@@ -2,7 +2,8 @@
 
 Source: https://github.com/sqoder/LiquidGlassKit — MIT, see LICENSE.
 
-Only the pieces this app uses are copied in: the configuration type, the
+The shader's edge lighting is modified — see the header of `LiquidGlassLens.metal`
+for what changed and why. Only the pieces this app uses are copied in: the configuration type, the
 `liquidGlassLens` modifier, and the Metal shader. `LiquidGlassCanvas` is not
 copied — it takes the lens frame as plain values, so a moving lens jumps
 instead of animating; `Selector/LensCanvas.swift` is an animatable

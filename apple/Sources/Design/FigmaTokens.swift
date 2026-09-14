@@ -33,42 +33,41 @@ enum Figma {
     // attempts read as flat — Apple's own effect draws none of them over a
     // near-white page, and hand-painted gradients could not fake refraction.
     //
-    // How the file's Glass panel maps onto the shader:
+    // How the file's Glass panel maps onto the shader. The shader is a
+    // vendored copy with its edge lighting rewritten (see the .metal header),
+    // and every number here was checked in a NumPy port of it, rendered
+    // against the Figma file — not guessed.
     //
-    //   Depth       → bezel        directly, in points: how far the curved
-    //                              edge extends inward
+    //   Depth       → bezel        × 0.645. The shader's band is wider than
+    //                              Figma's for the same number; 21.7 straight
+    //                              across washes the whole chip, 14 matches.
     //   Refraction  → strength     the shader saturates at 0.44 × bezel, so
     //                              Refraction% × 0.44 × bezel keeps the
     //                              slider meaningful
-    //   Dispersion  → dispersion   0–100 onto the shader's 0–2
-    //   Light %     → fresnelRim   the hairline's brightness
+    //   Dispersion  → dispersion   50 → 0.5
+    //   Light %     → fresnelRim   0.75: the 1.5pt hairline's brightness
     //   Light angle → lightAngle   see below
-    //   Frost       → (none)       a backdrop blur the shader does not do;
-    //                              4–5 in the file, left out
-    //
-    // `specular` is the shader's own narrow highlight lobe. The file's light is
-    // a broad wash, so this is held under the hairline rather than tied to
-    // the Light % — at 0.8 it reads as a hot spot the design does not have.
+    //   (soft light)→ specular     0.14: the broad wash over the edge band
+    //   Frost       → (none)       a backdrop blur the shader does not do
     //
     // Light angle. The file says −45° and shows the highlight top-left. In
     // the shader a surface is lit where its outward normal points *toward*
     // the light, i.e. where `dot(normal, −L)` is largest, with y down. A
     // source at the top-left means −L = (−1, −1)/√2, so L = (1, 1)/√2 and
     // the angle passed is atan2(1, 1) = +45° = +0.785 rad — the sign flips
-    // on the way across. If the highlight ever shows bottom-right, this is
-    // the number to negate.
+    // on the way across. Confirmed in the port: +0.785 lights the top-left.
 
     private static let lightAngleTopLeft: CGFloat = 0.785
 
     /// Chip — layer "Switch Toggle Items [1.0]":
     /// Light −45°/80%, Refraction 80, Depth 21.7, Dispersion 50, Frost 4.34.
     static let chipGlass = LiquidGlassConfiguration(
-        bezel: 21.7,
-        strength: 0.80 * 0.44 * 21.7,
+        bezel: 21.7 * 0.645,
+        strength: 0.80 * 0.44 * 21.7 * 0.645,
         mode: .foldFree,
-        dispersion: 1.0,
-        fresnelRim: 0.80,
-        specular: 0.45,
+        dispersion: 0.5,
+        fresnelRim: 0.75,
+        specular: 0.14,
         lightAngle: lightAngleTopLeft,
         shape: .capsule
     )
@@ -76,12 +75,12 @@ enum Figma {
     /// Continue — layer "Frame 2147239336":
     /// Light −45°/80%, Refraction 80, Depth 25.45, Dispersion 50, Frost 5.09.
     static let buttonGlass = LiquidGlassConfiguration(
-        bezel: 25.45,
-        strength: 0.80 * 0.44 * 25.45,
+        bezel: 25.45 * 0.645,
+        strength: 0.80 * 0.44 * 25.45 * 0.645,
         mode: .foldFree,
-        dispersion: 1.0,
-        fresnelRim: 0.80,
-        specular: 0.45,
+        dispersion: 0.5,
+        fresnelRim: 0.75,
+        specular: 0.14,
         lightAngle: lightAngleTopLeft,
         shape: .capsule
     )
