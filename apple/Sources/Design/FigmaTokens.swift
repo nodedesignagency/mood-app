@@ -62,15 +62,6 @@ enum Figma {
     // things, so this is drawn by hand — see `FigmaGlass` below for the how
     // and the why.
 
-    /// Rim width, scaled from each surface's Figma Depth.
-    ///
-    /// Depth is the thickness of the glass slab. There is no published formula
-    /// from slab depth to the width of the refracted band you see face-on, so
-    /// this divisor is fitted by eye against the Figma render. What it does
-    /// preserve is the *ratio* between the two surfaces — 37.97 / 21.7 = 1.75,
-    /// and 3.0 / 1.7 = 1.76 — so the bar reads as the thicker glass of the two,
-    /// which is the part that carries the look.
-    static let depthToRim: CGFloat = 12.7
 }
 
 /// Figma's Glass effect, drawn explicitly.
@@ -106,56 +97,91 @@ enum Figma {
 ///    they go *brighter* than the body, never darker. Every stop below is
 ///    white.
 struct FigmaGlass {
+    /// A gradient stop, before the light strength is applied.
+    typealias Stop = (at: Double, white: Double)
+
     /// The corner the light comes from, from Figma's light angle.
     var lit: UnitPoint
     /// The opposite corner. The bevel runs between the two.
     var shaded: UnitPoint
-    /// Figma's Depth for this surface.
+    /// How far the lit edge reaches inward.
+    ///
+    /// Figma's Depth is the thickness of the glass slab, and there is no
+    /// published formula from that to the width of the band you see face-on.
+    /// A single divisor was tried and abandoned: it cannot fit both surfaces
+    /// at once, because the band also scales with how thick the *shape* is,
+    /// and the bar's 58.5pt body against the chip's 48.4 are close enough
+    /// that Depth alone gets the ratio badly wrong. These are tuned against
+    /// the render, with `depth` recorded beside them as the source.
+    var rimWidth: CGFloat
+    /// Figma's Depth for this surface. Provenance, not an input.
     var depth: CGFloat
     /// 0–1, from Figma's light strength.
     var strength: Double
 
-    var rimWidth: CGFloat { depth / Figma.depthToRim }
+    var rimStops: [Stop]
+    var sheenStops: [Stop]
 
     /// Bar — Light 162°, Depth 37.97, Refraction 100, Frost 0, Dispersion 0.
     /// Lit along its upper edge.
-    static let bar = FigmaGlass(lit: .top, shaded: .bottom, depth: 37.97, strength: 0.8)
+    ///
+    /// Refraction is at its maximum and Depth is 65% of the bar's 58.5pt
+    /// thickness, which together say: almost all of this shape is edge. Hence
+    /// a 9pt rim on a 29pt half-thickness, rather than the hairline a smaller
+    /// Depth would give.
+    static let bar = FigmaGlass(
+        lit: .top,
+        shaded: .bottom,
+        rimWidth: 9.0,
+        depth: 37.97,
+        strength: 0.8,
+        // The peak sits just inside the edge, not on it. Starting at full
+        // brightness draws a hard white line along the top of the bar;
+        // ramping into it reads as a surface turning into the light.
+        rimStops: [(0.00, 0.48), (0.14, 0.72), (0.48, 0.20), (0.80, 0.05), (1.00, 0.46)],
+        sheenStops: [(0.00, 0.66), (0.34, 0.30), (0.70, 0.06), (1.00, 0.14)]
+    )
 
     /// Chip — Light −45°, Depth 21.7, Refraction 80, Frost 4.34, Dispersion 50.
     /// Lit from the upper left.
     ///
+    /// Its own stops rather than the bar's: on a 48pt capsule the bar's long
+    /// falloff spends most of the shape near zero and the capsule goes dull.
+    /// Shorter ramp, brighter body — the chip has to read as lifted off the
+    /// bar, and in the file it is plainly the brightest thing on screen.
+    ///
     /// Frost is a backdrop blur; behind the chip is the bar, which is itself
     /// near-flat, so blurring it would change almost nothing and is left out.
     /// Dispersion is a chromatic fringe with no cheap equivalent, also left out.
-    static let chip = FigmaGlass(lit: .topLeading, shaded: .bottomTrailing, depth: 21.7, strength: 0.8)
+    static let chip = FigmaGlass(
+        lit: .topLeading,
+        shaded: .bottomTrailing,
+        rimWidth: 1.8,
+        depth: 21.7,
+        strength: 0.8,
+        rimStops: [(0.00, 0.95), (0.40, 0.30), (1.00, 0.42)],
+        sheenStops: [(0.00, 0.78), (0.55, 0.20), (1.00, 0.00)]
+    )
 
     /// The lit edge, hugging the inside of the outline.
     ///
     /// Bright where the light lands, falling away, then lifting again at the
     /// far edge — light that entered the slab leaving through the opposite
     /// side. That second lift is what separates thick glass from a painted
-    /// highlight, and it is why the bar gets a wider rim than the chip.
-    var rim: LinearGradient {
-        LinearGradient(
-            stops: [
-                .init(color: .white.opacity(0.95 * strength), location: 0.00),
-                .init(color: .white.opacity(0.55 * strength), location: 0.28),
-                .init(color: .white.opacity(0.18 * strength), location: 0.62),
-                .init(color: .white.opacity(0.45 * strength), location: 1.00),
-            ],
-            startPoint: lit, endPoint: shaded
-        )
-    }
+    /// highlight, and it is also why there is never a dark edge here to be
+    /// mistaken for a shadow.
+    var rim: LinearGradient { gradient(rimStops) }
 
     /// Inner sheen — the body of the slab catching light across its lit half.
-    var sheen: LinearGradient {
+    var sheen: LinearGradient { gradient(sheenStops) }
+
+    private func gradient(_ stops: [Stop]) -> LinearGradient {
         LinearGradient(
-            stops: [
-                .init(color: .white.opacity(0.40 * strength), location: 0.00),
-                .init(color: .white.opacity(0.10 * strength), location: 0.42),
-                .init(color: .clear, location: 0.78),
-            ],
-            startPoint: lit, endPoint: shaded
+            stops: stops.map {
+                .init(color: .white.opacity($0.white * strength), location: $0.at)
+            },
+            startPoint: lit,
+            endPoint: shaded
         )
     }
 }
