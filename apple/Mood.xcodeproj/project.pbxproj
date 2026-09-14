@@ -68,6 +68,7 @@
 				3A585FA15D66223CDC83266F /* Design */,
 				FBF563E807669EE7271963C1 /* Screen */,
 				BA0F826919BFC0873FE92A37 /* Selector */,
+				AA4969B211D51AF87F626DC3 /* Vendor */,
 				2EB864DE2DD7E2A1A88CEFA4 /* MoodApp.swift */,
 			);
 			path = Sources;
@@ -99,6 +100,14 @@
 				6876E944BF523F492DC06E4D /* MoodFace.swift */,
 			);
 			path = Selector;
+			sourceTree = "<group>";
+		};
+		AA4969B211D51AF87F626DC3 /* Vendor */ = {
+			isa = PBXGroup;
+			children = (
+				788D88EC96CDCAA9F70EA007 /* LiquidGlassKit */,
+			);
+			path = Vendor;
 			sourceTree = "<group>";
 		};
 		788D88EC96CDCAA9F70EA007 /* LiquidGlassKit */ = {

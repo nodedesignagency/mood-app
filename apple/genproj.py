@@ -27,6 +27,13 @@ if not files:
 groups = {}
 for f in files:
     groups.setdefault(os.path.dirname(f), []).append(f)
+    # Every ancestor folder needs a group too, even one holding no files of
+    # its own — otherwise its child group has no parent, Xcode resolves the
+    # child's files against the project root, and the build cannot find them.
+    d = os.path.dirname(os.path.dirname(f))
+    while d:
+        groups.setdefault(d, [])
+        d = os.path.dirname(d)
 
 fref = {f: oid("fileref:" + f) for f in files}
 bfile = {f: oid("buildfile:" + f) for f in files}
