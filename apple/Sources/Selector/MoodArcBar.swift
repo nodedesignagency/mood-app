@@ -62,26 +62,15 @@ struct MoodArcBar: View {
 
     // MARK: - Pieces
 
-    /// The bar: Figma's Glass, drawn explicitly. No shadow — the file has none
-    /// on this layer, and `FigmaGlass` explains why the system effect cannot
-    /// give us one without it.
+    /// The bar: the layer's flat fill and nothing else.
     ///
-    /// The stroke is laid down at twice the rim width and clipped back to the
-    /// shape, which leaves exactly the inner half. `strokeBorder` would say
-    /// this more directly, but it needs an `InsettableShape`, and insetting a
-    /// freehand bezier means offsetting every curve — not worth it for a band
-    /// a few points wide.
+    /// The file puts a Glass effect on it too, but on a 58pt band that is only
+    /// ~10 levels off the page behind it there is no room for a highlight: any
+    /// edge bright enough to read merges with the background and eats the
+    /// silhouette, and any edge dim enough to keep the silhouette is invisible
+    /// up close. Flat is what the file *looks* like at this size.
     private func bar(geo: ArcGeometry) -> some View {
-        let shape = ArcBarShape(geo: geo)
-        let glass = FigmaGlass.bar
-
-        return ZStack {
-            shape.fill(Figma.barFill)
-            shape.fill(glass.sheen)
-            shape
-                .stroke(glass.rim, lineWidth: glass.rimWidth * 2)
-                .clipShape(shape)
-        }
+        ArcBarShape(geo: geo).fill(Figma.barFill)
     }
 
     /// The selected mood: a glass capsule riding on the bar.

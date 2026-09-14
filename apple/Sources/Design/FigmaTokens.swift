@@ -127,37 +127,14 @@ struct FigmaGlass {
     var rimStops: [Stop]
     var sheenStops: [Stop]
 
-    /// Bar — Light 162°, Depth 37.97, Refraction 100, Frost 0, Dispersion 0.
-    /// Lit along its upper edge.
-    ///
-    /// The rule that matters here: the highlight must never get bright enough
-    /// to match the page behind the bar. The body is only ~10 levels off
-    /// #F8F9FC, so a strong white edge does not read as glass — it makes the
-    /// top of the bar vanish into the background and the silhouette loses its
-    /// arc. Every stop stays well under that line.
-    static let bar = FigmaGlass(
-        lit: .top,
-        shaded: .bottom,
-        rimWidth: 5.0,
-        depth: 37.97,
-        strength: 0.8,
-        // The peak sits just inside the edge, not on it. Starting at full
-        // brightness draws a hard white line along the top of the bar;
-        // ramping into it reads as a surface turning into the light.
-        rimStops: [(0.00, .light, 0.30), (0.15, .light, 0.46), (0.55, .light, 0.10), (1.00, .light, 0.16)],
-        sheenStops: [(0.00, .light, 0.22), (0.45, .light, 0.06), (1.00, .light, 0.00)]
-    )
-
     /// Chip — Light −45°, Depth 21.7, Refraction 80, Frost 4.34, Dispersion 50.
     /// Lit from the upper left.
     ///
-    /// The chip sits on grey, not on the page, so unlike the bar it can afford
-    /// a bright rim. What makes it read as a lens rather than a flat sticker
-    /// is contrast *between rim and body*: the rim goes to full white on the
-    /// lit corner while the body stays at the file's 65%, and the far corner
-    /// carries a faint shade — inside the outline, where it reads as the
-    /// thickness of the glass rather than as a drop shadow. With rim and body
-    /// both near-white the chip flattens out completely.
+    /// A thin, bright edge all the way round — brightest on the lit corner —
+    /// over the file's 65% white body, with the faintest shade on the far
+    /// corner. A wider rim with a real shade was tried and reads as a bevelled
+    /// plastic button up close; Figma's glass edge is fine and light, not
+    /// carved.
     ///
     /// Frost is a backdrop blur; behind the chip is the bar, which is itself
     /// near-flat, so blurring it would change almost nothing and is left out.
@@ -165,11 +142,11 @@ struct FigmaGlass {
     static let chip = FigmaGlass(
         lit: .topLeading,
         shaded: .bottomTrailing,
-        rimWidth: 2.2,
+        rimWidth: 1.2,
         depth: 21.7,
         strength: 0.8,
-        rimStops: [(0.00, .light, 1.00), (0.45, .light, 0.10), (0.80, .shade, 0.06), (1.00, .shade, 0.18)],
-        sheenStops: [(0.00, .light, 0.30), (0.50, .light, 0.00), (1.00, .shade, 0.05)]
+        rimStops: [(0.00, .light, 1.00), (0.50, .light, 0.60), (1.00, .light, 0.35)],
+        sheenStops: [(0.00, .light, 0.25), (0.50, .light, 0.00), (1.00, .shade, 0.03)]
     )
 
     /// The lit edge, hugging the inside of the outline.
