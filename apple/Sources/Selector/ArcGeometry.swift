@@ -74,6 +74,22 @@ struct ArcGeometry {
         )
     }
 
+    /// Direction of travel at a continuous stop index, as a rotation to apply
+    /// to something riding the curve so it lies along it rather than level.
+    ///
+    /// Read off `point(at:)` by central difference rather than by
+    /// differentiating the spline: one function is the source of truth for
+    /// where things are, and the angle is whatever that function implies.
+    /// Positive is clockwise on screen (y grows downward), which is also what
+    /// `rotationEffect` takes, so this needs no conversion. Works out at
+    /// −11.6° on the far left, rising to +8.2° on the far right.
+    func angle(at index: Double) -> Angle {
+        let eps = 0.01
+        let a = point(at: max(0, index - eps))
+        let b = point(at: min(Double(BarLayout.last), index + eps))
+        return .radians(atan2(b.y - a.y, b.x - a.x))
+    }
+
     /// Finger x → continuous stop index.
     ///
     /// The stops are unevenly spaced, so this walks the measured x values and

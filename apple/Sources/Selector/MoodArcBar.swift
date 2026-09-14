@@ -33,6 +33,10 @@ struct MoodArcBar: View {
         GeometryReader { proxy in
             let geo = ArcGeometry(width: proxy.size.width)
             let chipCenter = geo.point(at: progress)
+            // The chip lies along the curve, not level: the bar climbs ~12°
+            // at its left end and falls ~8° at its right, and a level capsule
+            // there pokes out of the bar's lower edge.
+            let chipAngle = geo.angle(at: progress)
 
             ZStack(alignment: .topLeading) {
                 // Everything in here is what the lens refracts: the bar, the
@@ -45,13 +49,14 @@ struct MoodArcBar: View {
                         stop(mood: mood, geo: geo)
                     }
 
-                    chipBody(at: chipCenter)
+                    chipBody(at: chipCenter, angle: chipAngle)
                 }
-                .lensCanvas(center: chipCenter, size: chipSize, config: Figma.chipGlass)
+                .lensCanvas(center: chipCenter, size: chipSize, rotation: chipAngle, config: Figma.chipGlass)
 
                 // Above the lens, so it stays crisp while everything under
                 // it bends.
                 MoodFace(progress: progress, size: chipIconSize, color: Figma.iconInk)
+                    .rotationEffect(chipAngle)
                     .position(chipCenter)
                     .allowsHitTesting(false)
             }
@@ -90,10 +95,13 @@ struct MoodArcBar: View {
     /// The chip's body: the file's 65% white and its drop shadow. It sits in
     /// the refracted layer, exactly under the lens, so the glass edge the
     /// shader draws lands on its silhouette.
-    private func chipBody(at center: CGPoint) -> some View {
+    private func chipBody(at center: CGPoint, angle: Angle) -> some View {
         Capsule()
             .fill(Figma.chipFill)
             .frame(width: chipSize.width, height: chipSize.height)
+            // Rotated before the shadow, so the shadow still falls straight
+            // down the screen rather than tilting with the chip.
+            .rotationEffect(angle)
             .shadow(color: Figma.shadowColor, radius: Figma.shadowRadius, x: 0, y: Figma.shadowY)
             .position(center)
     }

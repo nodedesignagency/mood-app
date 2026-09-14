@@ -170,6 +170,7 @@ static float sdContinuousBox(float2 p, float2 b, float r, float n) {
     SwiftUI::Layer layer,
     float2 lensCenter,
     float2 lensSize,
+    float lensAngle,
     float cornerRadius,
     float cornerExponent,
     float bezel,
@@ -180,7 +181,12 @@ static float sdContinuousBox(float2 p, float2 b, float r, float n) {
     float specular,
     float lightAngle
 ) {
-    float2 p = position - lensCenter;
+    // Into the lens's own space: rotate by −lensAngle about its centre, so the
+    // SDF stays axis-aligned while the lens on screen lies along the curve.
+    // (Added to upstream — the lens there is always level.)
+    float ca = cos(lensAngle), sa = sin(lensAngle);
+    float2 pw = position - lensCenter;
+    float2 p = float2(ca * pw.x + sa * pw.y, -sa * pw.x + ca * pw.y);
 
     float minHalf = min(lensSize.x, lensSize.y) * 0.5;
     float r = (cornerRadius < 0.0) ? minHalf : min(cornerRadius, minHalf);
@@ -203,7 +209,10 @@ static float sdContinuousBox(float2 p, float2 b, float r, float n) {
              - sdContinuousBox(p - float2(e, 0.0), halfExtents, r, cornerExponent);
     float dy = sdContinuousBox(p + float2(0.0, e), halfExtents, r, cornerExponent)
              - sdContinuousBox(p - float2(0.0, e), halfExtents, r, cornerExponent);
-    float2 normalDir = normalize(float2(dx, dy) + float2(1e-6, 0.0));
+    // Normal in lens space, rotated back to screen space so the light and
+    // the sampling stay world-fixed while the lens turns.
+    float2 nl = normalize(float2(dx, dy) + float2(1e-6, 0.0));
+    float2 normalDir = float2(ca * nl.x - sa * nl.y, sa * nl.x + ca * nl.y);
 
     // Dual Displacement
     float k = min(2.0 * strength / safeBezel, 0.88);
