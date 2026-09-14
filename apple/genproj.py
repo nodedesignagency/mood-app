@@ -11,10 +11,16 @@ def oid(key):
     """Deterministic 24-hex id, so regenerating produces a stable diff."""
     return hashlib.sha1(key.encode()).hexdigest()[:24].upper()
 
+# Swift sources and Metal shaders both go in the Sources phase; Xcode compiles
+# the shaders into the app's default metallib, which ShaderLibrary.default loads.
 files = sorted(
     str(p.relative_to(ROOT / "Sources")).replace("\\", "/")
-    for p in (ROOT / "Sources").rglob("*.swift")
+    for p in (ROOT / "Sources").rglob("*")
+    if p.suffix in (".swift", ".metal")
 )
+
+def filetype(f):
+    return "sourcecode.metal" if f.endswith(".metal") else "sourcecode.swift"
 if not files:
     sys.exit("no Swift sources found under " + str(ROOT / "Sources"))
 
@@ -50,8 +56,8 @@ out.append(sec("PBXBuildFile", body))
 
 body = ""
 for f in files:
-    body += '%s%s%s /* %s */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = %s; sourceTree = "<group>"; };\n' % (
-        T, T, fref[f], base(f), base(f))
+    body += '%s%s%s /* %s */ = {isa = PBXFileReference; lastKnownFileType = %s; path = %s; sourceTree = "<group>"; };\n' % (
+        T, T, fref[f], base(f), filetype(f), base(f))
 body += "%s%s%s /* Mood.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Mood.app; sourceTree = BUILT_PRODUCTS_DIR; };\n" % (
     T, T, I["appRef"])
 out.append(sec("PBXFileReference", body))

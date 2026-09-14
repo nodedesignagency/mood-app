@@ -20,21 +20,86 @@ enum Figma {
     /// not reproduced. The band is only ~10 levels off the page behind it, so
     /// any highlight bright enough to read merges with the background and
     /// eats the silhouette, and any dim enough to keep the silhouette is
-    /// invisible up close. The system effect, for its part, always casts a
-    /// shadow, and this layer has none. Flat is what the file looks like at
-    /// this size.
+    /// invisible up close. Flat is what the file looks like at this size.
     static let barFill = Color(hex: 0xE9EDF4).opacity(0.60)
 
-    // MARK: - Selected chip — layer "Switch Toggle Items [1.0]"
+    // MARK: - Glass
     //
-    // The chip is the system's Liquid Glass (`glassEffect`, iOS 26), which is
-    // what the file's Glass effect is a mockup *of*. Its rim, its refraction
-    // of whatever passes beneath it, its response to touch and its shadow are
-    // all the system's own; none of it is drawn here. The file's Glass
-    // settings (Light −45°/80%, Refraction 80, Depth 21.7, Dispersion 50,
-    // Frost 4.34) and its drop shadow (Y 5.42, Blur 10.85, #1B1C1D @ 5%) are
-    // the designer's approximation of that effect and are not applied on top
-    // of it — doubling the shadow was tried, and looked like it.
+    // Both glass surfaces are drawn by the vendored LiquidGlassKit shader
+    // (Sources/Vendor), which refracts whatever is behind the lens and draws
+    // the edge: a white Fresnel hairline, a specular arc on the lit side, and
+    // a darkening on the shadow side. Those are the three things visible at
+    // the edge of every glass layer in the file, and the reason the previous
+    // attempts read as flat — Apple's own effect draws none of them over a
+    // near-white page, and hand-painted gradients could not fake refraction.
+    //
+    // How the file's Glass panel maps onto the shader:
+    //
+    //   Depth       → bezel        directly, in points: how far the curved
+    //                              edge extends inward
+    //   Refraction  → strength     the shader saturates at 0.44 × bezel, so
+    //                              Refraction% × 0.44 × bezel keeps the
+    //                              slider meaningful
+    //   Dispersion  → dispersion   0–100 onto the shader's 0–2
+    //   Light %     → fresnelRim   the hairline's brightness
+    //   Light angle → lightAngle   see below
+    //   Frost       → (none)       a backdrop blur the shader does not do;
+    //                              4–5 in the file, left out
+    //
+    // `specular` is the shader's own narrow highlight lobe. The file's light is
+    // a broad wash, so this is held under the hairline rather than tied to
+    // the Light % — at 0.8 it reads as a hot spot the design does not have.
+    //
+    // Light angle. The file says −45° and shows the highlight top-left. In
+    // the shader a surface is lit where its outward normal points *toward*
+    // the light, i.e. where `dot(normal, −L)` is largest, with y down. A
+    // source at the top-left means −L = (−1, −1)/√2, so L = (1, 1)/√2 and
+    // the angle passed is atan2(1, 1) = +45° = +0.785 rad — the sign flips
+    // on the way across. If the highlight ever shows bottom-right, this is
+    // the number to negate.
+
+    private static let lightAngleTopLeft: CGFloat = 0.785
+
+    /// Chip — layer "Switch Toggle Items [1.0]":
+    /// Light −45°/80%, Refraction 80, Depth 21.7, Dispersion 50, Frost 4.34.
+    static let chipGlass = LiquidGlassConfiguration(
+        bezel: 21.7,
+        strength: 0.80 * 0.44 * 21.7,
+        mode: .foldFree,
+        dispersion: 1.0,
+        fresnelRim: 0.80,
+        specular: 0.45,
+        lightAngle: lightAngleTopLeft,
+        shape: .capsule
+    )
+
+    /// Continue — layer "Frame 2147239336":
+    /// Light −45°/80%, Refraction 80, Depth 25.45, Dispersion 50, Frost 5.09.
+    static let buttonGlass = LiquidGlassConfiguration(
+        bezel: 25.45,
+        strength: 0.80 * 0.44 * 25.45,
+        mode: .foldFree,
+        dispersion: 1.0,
+        fresnelRim: 0.80,
+        specular: 0.45,
+        lightAngle: lightAngleTopLeft,
+        shape: .capsule
+    )
+
+    /// Drop shadow, identical on the chip and the button:
+    /// X 0, Y 5.42, Blur 10.85, Spread 0, #1B1C1D @ 5%.
+    ///
+    /// Figma's "Blur" is roughly twice the Gaussian sigma, while SwiftUI's
+    /// `radius` is roughly the sigma itself — so the blur is halved on the way
+    /// across, otherwise the shadow comes out twice as soft as designed.
+    static let shadowColor = Color(hex: 0x1B1C1D).opacity(0.05)
+    static let shadowRadius: CGFloat = 10.85 / 2
+    static let shadowY: CGFloat = 5.42
+
+    // MARK: - Selected chip — layer "Switch Toggle Items [1.0]"
+
+    /// Fill FFFFFF @ 65%.
+    static let chipFill = Color.white.opacity(0.65)
 
     /// At rest — the "Active state" frame.
     static let chipSize = CGSize(width: 78.12, height: 48.42)
@@ -48,6 +113,13 @@ enum Figma {
     static let chipPressedSize = CGSize(width: 94, height: 66)
     static let chipPressedIconSize: CGFloat = 34.2
 
+    // MARK: - Continue — layer "Frame 2147239336"
+
+    /// Fill FFFFFF @ 70%. 128.45 × 49.45, gap 6, text 17pt.
+    static let buttonFill = Color.white.opacity(0.70)
+    static let buttonSize = CGSize(width: 128.45, height: 49.45)
+    static let buttonGap: CGFloat = 6
+
     // MARK: - Icons
 
     /// From the chip's "Selection colors" swatch.
@@ -56,53 +128,4 @@ enum Figma {
     /// Unselected stops' icons, measured: 26.11, 24.84, 25.09, 26.33 — so they
     /// are *larger* than the resting chip's icon, not smaller.
     static let stopIconSize: CGFloat = 25.6
-}
-
-/// The lit edge of Figma's Glass, laid over the system effect.
-///
-/// Liquid Glass derives its rim from whatever sits behind it. Behind the
-/// chip and the Continue button is a near-white page, so it draws almost
-/// none and both read as flat white capsules — while in the file each has a
-/// clear bright edge from its light at −45°. This adds exactly that edge and
-/// nothing else: a 1pt rim brightest at the top-left, plus a faint sheen in
-/// the same corner. The glass underneath keeps doing the refraction, the
-/// swell and the shadow.
-///
-/// Both surfaces are capsules, so the rim is a capsule too.
-struct FigmaGlassEdge: ViewModifier {
-    /// Figma: Light −45° / 80%.
-    private let lit: UnitPoint = .topLeading
-    private let shaded: UnitPoint = .bottomTrailing
-
-    func body(content: Content) -> some View {
-        content
-            .overlay {
-                Capsule()
-                    .fill(LinearGradient(
-                        stops: [
-                            .init(color: .white.opacity(0.22), location: 0.0),
-                            .init(color: .white.opacity(0.0), location: 0.55),
-                        ],
-                        startPoint: lit, endPoint: shaded
-                    ))
-                    .allowsHitTesting(false)
-            }
-            .overlay {
-                Capsule()
-                    .strokeBorder(LinearGradient(
-                        stops: [
-                            .init(color: .white.opacity(0.95), location: 0.0),
-                            .init(color: .white.opacity(0.30), location: 0.45),
-                            .init(color: .white.opacity(0.60), location: 1.0),
-                        ],
-                        startPoint: lit, endPoint: shaded
-                    ), lineWidth: 1)
-                    .allowsHitTesting(false)
-            }
-    }
-}
-
-extension View {
-    /// See `FigmaGlassEdge`.
-    func figmaGlassEdge() -> some View { modifier(FigmaGlassEdge()) }
 }

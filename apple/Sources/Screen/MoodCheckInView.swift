@@ -102,21 +102,29 @@ struct MoodCheckInView: View {
         .frame(maxWidth: 260, maxHeight: 260)
     }
 
+    /// Continue: the file's 70% white capsule, with its glass edge drawn by
+    /// the shader and its drop shadow. Not the system button style — that
+    /// draws its own material over the page, and on a near-white page it
+    /// comes out flat.
     private var continueButton: some View {
         Button {
             // Wire to the next step in the flow.
         } label: {
-            HStack(spacing: 8) {
+            HStack(spacing: Figma.buttonGap) {
                 Text("Continue")
                 Image(systemName: "arrow.right")
             }
-            .font(.system(size: 16, weight: .semibold, design: .rounded))
-            .padding(.horizontal, 22)
-            .padding(.vertical, 14)
+            .font(.system(size: 17, weight: .semibold, design: .rounded))
+            .foregroundStyle(Figma.iconInk)
+            .frame(width: Figma.buttonSize.width, height: Figma.buttonSize.height)
+            .background {
+                Capsule()
+                    .fill(Figma.buttonFill)
+                    .liquidGlassLens(Figma.buttonGlass)
+                    .shadow(color: Figma.shadowColor, radius: Figma.shadowRadius, x: 0, y: Figma.shadowY)
+            }
         }
-        .buttonStyle(.glass)
-        .figmaGlassEdge()
-        .tint(.primary)
+        .buttonStyle(.plain)
     }
 
     private var hint: some View {

@@ -12,8 +12,12 @@
 		F32A4261B3D7CEABA5272E05 /* MoodApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2EB864DE2DD7E2A1A88CEFA4 /* MoodApp.swift */; };
 		9632B5DD646F76DB9DE890A2 /* MoodCheckInView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F55EEF2297994D6C23E2F99C /* MoodCheckInView.swift */; };
 		16D7BBF630D761FA08BAAB77 /* ArcGeometry.swift in Sources */ = {isa = PBXBuildFile; fileRef = F50E2537898C3C70DAA887A4 /* ArcGeometry.swift */; };
+		111E9DC9621C4D33D8FB97D9 /* LensCanvas.swift in Sources */ = {isa = PBXBuildFile; fileRef = A75B6A573D72898B83D9DBDA /* LensCanvas.swift */; };
 		83B58FFA53C050FD7E117D18 /* MoodArcBar.swift in Sources */ = {isa = PBXBuildFile; fileRef = C8A7B5CA7CD88700EEE646D1 /* MoodArcBar.swift */; };
 		AE584AC8BBC9B09B18655E3B /* MoodFace.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6876E944BF523F492DC06E4D /* MoodFace.swift */; };
+		E732299940E73421C06FDC99 /* LiquidGlassConfiguration.swift in Sources */ = {isa = PBXBuildFile; fileRef = F84394F359AF4BF3D435D458 /* LiquidGlassConfiguration.swift */; };
+		2300B90811B4E1E7CE740C30 /* LiquidGlassLens.metal in Sources */ = {isa = PBXBuildFile; fileRef = 0FD7139EC04BFAA2B9C1043B /* LiquidGlassLens.metal */; };
+		6B104F3ECD8E1F6A52F04B87 /* LiquidGlassModifier.swift in Sources */ = {isa = PBXBuildFile; fileRef = AF25D2018B10790632966C60 /* LiquidGlassModifier.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -22,8 +26,12 @@
 		2EB864DE2DD7E2A1A88CEFA4 /* MoodApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MoodApp.swift; sourceTree = "<group>"; };
 		F55EEF2297994D6C23E2F99C /* MoodCheckInView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MoodCheckInView.swift; sourceTree = "<group>"; };
 		F50E2537898C3C70DAA887A4 /* ArcGeometry.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ArcGeometry.swift; sourceTree = "<group>"; };
+		A75B6A573D72898B83D9DBDA /* LensCanvas.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LensCanvas.swift; sourceTree = "<group>"; };
 		C8A7B5CA7CD88700EEE646D1 /* MoodArcBar.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MoodArcBar.swift; sourceTree = "<group>"; };
 		6876E944BF523F492DC06E4D /* MoodFace.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MoodFace.swift; sourceTree = "<group>"; };
+		F84394F359AF4BF3D435D458 /* LiquidGlassConfiguration.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LiquidGlassConfiguration.swift; sourceTree = "<group>"; };
+		0FD7139EC04BFAA2B9C1043B /* LiquidGlassLens.metal */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.metal; path = LiquidGlassLens.metal; sourceTree = "<group>"; };
+		AF25D2018B10790632966C60 /* LiquidGlassModifier.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LiquidGlassModifier.swift; sourceTree = "<group>"; };
 		8F60702AC53B1FAC3FB753D8 /* Mood.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Mood.app; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
@@ -86,10 +94,21 @@
 			isa = PBXGroup;
 			children = (
 				F50E2537898C3C70DAA887A4 /* ArcGeometry.swift */,
+				A75B6A573D72898B83D9DBDA /* LensCanvas.swift */,
 				C8A7B5CA7CD88700EEE646D1 /* MoodArcBar.swift */,
 				6876E944BF523F492DC06E4D /* MoodFace.swift */,
 			);
 			path = Selector;
+			sourceTree = "<group>";
+		};
+		788D88EC96CDCAA9F70EA007 /* LiquidGlassKit */ = {
+			isa = PBXGroup;
+			children = (
+				F84394F359AF4BF3D435D458 /* LiquidGlassConfiguration.swift */,
+				0FD7139EC04BFAA2B9C1043B /* LiquidGlassLens.metal */,
+				AF25D2018B10790632966C60 /* LiquidGlassModifier.swift */,
+			);
+			path = LiquidGlassKit;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -165,8 +184,12 @@
 				F32A4261B3D7CEABA5272E05 /* MoodApp.swift in Sources */,
 				9632B5DD646F76DB9DE890A2 /* MoodCheckInView.swift in Sources */,
 				16D7BBF630D761FA08BAAB77 /* ArcGeometry.swift in Sources */,
+				111E9DC9621C4D33D8FB97D9 /* LensCanvas.swift in Sources */,
 				83B58FFA53C050FD7E117D18 /* MoodArcBar.swift in Sources */,
 				AE584AC8BBC9B09B18655E3B /* MoodFace.swift in Sources */,
+				E732299940E73421C06FDC99 /* LiquidGlassConfiguration.swift in Sources */,
+				2300B90811B4E1E7CE740C30 /* LiquidGlassLens.metal in Sources */,
+				6B104F3ECD8E1F6A52F04B87 /* LiquidGlassModifier.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

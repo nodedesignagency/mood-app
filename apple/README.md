@@ -1,8 +1,11 @@
 # Mood — native iOS
 
-SwiftUI, iOS 26+. Liquid Glass is used natively (`glassEffect`,
-`GlassEffectContainer`), which is the reason this exists rather than the React
-Native version in the repo root.
+SwiftUI, iOS 26+. The glass surfaces are drawn by a vendored Metal shader
+(`Sources/Vendor/LiquidGlassKit`, MIT) that refracts what is behind them and
+draws the lit edge from the Figma file's own Glass values. Apple's
+`glassEffect` was tried first and dropped: it samples the page behind it, and
+on this near-white page there is nothing to sample, so it renders flat and
+adds a shadow the design does not have.
 
 ## Opening it
 
