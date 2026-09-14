@@ -39,6 +39,15 @@ if [ -n "$DUPES" ]; then
 fi
 APP="$BUILD_DIR/Build/Products/Debug-iphonesimulator/$SCHEME.app"
 
+# The app has a Metal shader, and Xcode 26 ships the Metal compiler as a
+# separate download. Without it the build dies halfway through with a message
+# that is easy to miss, so check up front and say what to do.
+if ! xcrun metal --version >/dev/null 2>&1; then
+  echo "✗ The Metal compiler is not installed. Run this once, then try again:" >&2
+  echo "    xcodebuild -downloadComponent MetalToolchain" >&2
+  exit 1
+fi
+
 echo "▸ Building $SCHEME for $DEVICE"
 # `| xcbeautify` is nicer if you have it; grep keeps the noise down without it.
 xcodebuild \
