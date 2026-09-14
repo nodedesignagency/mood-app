@@ -57,3 +57,52 @@ enum Figma {
     /// are *larger* than the resting chip's icon, not smaller.
     static let stopIconSize: CGFloat = 25.6
 }
+
+/// The lit edge of Figma's Glass, laid over the system effect.
+///
+/// Liquid Glass derives its rim from whatever sits behind it. Behind the
+/// chip and the Continue button is a near-white page, so it draws almost
+/// none and both read as flat white capsules — while in the file each has a
+/// clear bright edge from its light at −45°. This adds exactly that edge and
+/// nothing else: a 1pt rim brightest at the top-left, plus a faint sheen in
+/// the same corner. The glass underneath keeps doing the refraction, the
+/// swell and the shadow.
+///
+/// Both surfaces are capsules, so the rim is a capsule too.
+struct FigmaGlassEdge: ViewModifier {
+    /// Figma: Light −45° / 80%.
+    private let lit: UnitPoint = .topLeading
+    private let shaded: UnitPoint = .bottomTrailing
+
+    func body(content: Content) -> some View {
+        content
+            .overlay {
+                Capsule()
+                    .fill(LinearGradient(
+                        stops: [
+                            .init(color: .white.opacity(0.22), location: 0.0),
+                            .init(color: .white.opacity(0.0), location: 0.55),
+                        ],
+                        startPoint: lit, endPoint: shaded
+                    ))
+                    .allowsHitTesting(false)
+            }
+            .overlay {
+                Capsule()
+                    .strokeBorder(LinearGradient(
+                        stops: [
+                            .init(color: .white.opacity(0.95), location: 0.0),
+                            .init(color: .white.opacity(0.30), location: 0.45),
+                            .init(color: .white.opacity(0.60), location: 1.0),
+                        ],
+                        startPoint: lit, endPoint: shaded
+                    ), lineWidth: 1)
+                    .allowsHitTesting(false)
+            }
+    }
+}
+
+extension View {
+    /// See `FigmaGlassEdge`.
+    func figmaGlassEdge() -> some View { modifier(FigmaGlassEdge()) }
+}

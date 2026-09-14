@@ -89,6 +89,7 @@ struct MoodArcBar: View {
         return MoodFace(progress: progress, size: icon, color: Figma.iconInk)
             .frame(width: size.width, height: size.height)
             .glassEffect(.regular.interactive(), in: .capsule)
+            .figmaGlassEdge()
             .animation(.spring(response: 0.28, dampingFraction: 0.72), value: isDragging)
             .position(geo.point(at: progress))
     }

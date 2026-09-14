@@ -115,6 +115,7 @@ struct MoodCheckInView: View {
             .padding(.vertical, 14)
         }
         .buttonStyle(.glass)
+        .figmaGlassEdge()
         .tint(.primary)
     }
 
