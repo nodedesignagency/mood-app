@@ -45,6 +45,9 @@ enum Figma {
     static let chipShadowRadius: CGFloat = 10.85 / 2
     static let chipShadowY: CGFloat = 5.42
 
+    /// Shade colour for the chip's far edge — the same ink as its shadow.
+    static let rimShade = Color(hex: 0x1B1C1D)
+
     // MARK: - Icons
 
     /// From the chip's "Selection colors" swatch.
@@ -91,14 +94,16 @@ enum Figma {
 ///    width and clipped back to the shape, which leaves exactly the inner
 ///    half — or `strokeBorder`, where the shape is insettable.
 ///
-/// 2. **Nothing is darker than the fill.** It ended its rim in #1B1C1D at 14%
-///    along the bottom edge, which is a drop shadow with extra steps. A thick
-///    glass slab on a light ground scatters light out through its edges, so
-///    they go *brighter* than the body, never darker. Every stop below is
-///    white.
+/// 2. **No shade on the bar.** It ended the bar's rim in #1B1C1D at 14% along
+///    the bottom edge, which is a drop shadow with extra steps. The bar's
+///    stops are all white. The chip is the exception: a faint shade on its
+///    far corner, kept inside its outline, is what makes it read as a lens
+///    sitting on the bar rather than a sticker printed on it.
 struct FigmaGlass {
+    /// Which way a stop pushes the surface: toward the light, or into shade.
+    enum Tint { case light, shade }
     /// A gradient stop, before the light strength is applied.
-    typealias Stop = (at: Double, white: Double)
+    typealias Stop = (at: Double, tint: Tint, opacity: Double)
 
     /// The corner the light comes from, from Figma's light angle.
     var lit: UnitPoint
@@ -133,23 +138,26 @@ struct FigmaGlass {
     static let bar = FigmaGlass(
         lit: .top,
         shaded: .bottom,
-        rimWidth: 4.0,
+        rimWidth: 5.0,
         depth: 37.97,
         strength: 0.8,
         // The peak sits just inside the edge, not on it. Starting at full
         // brightness draws a hard white line along the top of the bar;
         // ramping into it reads as a surface turning into the light.
-        rimStops: [(0.00, 0.30), (0.15, 0.38), (0.55, 0.10), (1.00, 0.16)],
-        sheenStops: [(0.00, 0.22), (0.45, 0.06), (1.00, 0.00)]
+        rimStops: [(0.00, .light, 0.30), (0.15, .light, 0.46), (0.55, .light, 0.10), (1.00, .light, 0.16)],
+        sheenStops: [(0.00, .light, 0.22), (0.45, .light, 0.06), (1.00, .light, 0.00)]
     )
 
     /// Chip — Light −45°, Depth 21.7, Refraction 80, Frost 4.34, Dispersion 50.
     /// Lit from the upper left.
     ///
-    /// Its own stops rather than the bar's: on a 48pt capsule the bar's long
-    /// falloff spends most of the shape near zero and the capsule goes dull.
-    /// Shorter ramp, brighter body — the chip has to read as lifted off the
-    /// bar, and in the file it is plainly the brightest thing on screen.
+    /// The chip sits on grey, not on the page, so unlike the bar it can afford
+    /// a bright rim. What makes it read as a lens rather than a flat sticker
+    /// is contrast *between rim and body*: the rim goes to full white on the
+    /// lit corner while the body stays at the file's 65%, and the far corner
+    /// carries a faint shade — inside the outline, where it reads as the
+    /// thickness of the glass rather than as a drop shadow. With rim and body
+    /// both near-white the chip flattens out completely.
     ///
     /// Frost is a backdrop blur; behind the chip is the bar, which is itself
     /// near-flat, so blurring it would change almost nothing and is left out.
@@ -157,11 +165,11 @@ struct FigmaGlass {
     static let chip = FigmaGlass(
         lit: .topLeading,
         shaded: .bottomTrailing,
-        rimWidth: 1.6,
+        rimWidth: 2.2,
         depth: 21.7,
         strength: 0.8,
-        rimStops: [(0.00, 0.70), (0.45, 0.20), (1.00, 0.30)],
-        sheenStops: [(0.00, 0.55), (0.60, 0.12), (1.00, 0.00)]
+        rimStops: [(0.00, .light, 1.00), (0.45, .light, 0.10), (0.80, .shade, 0.06), (1.00, .shade, 0.18)],
+        sheenStops: [(0.00, .light, 0.30), (0.50, .light, 0.00), (1.00, .shade, 0.05)]
     )
 
     /// The lit edge, hugging the inside of the outline.
@@ -179,7 +187,8 @@ struct FigmaGlass {
     private func gradient(_ stops: [Stop]) -> LinearGradient {
         LinearGradient(
             stops: stops.map {
-                .init(color: .white.opacity($0.white * strength), location: $0.at)
+                let base: Color = $0.tint == .light ? .white : Figma.rimShade
+                return .init(color: base.opacity($0.opacity * strength), location: $0.at)
             },
             startPoint: lit,
             endPoint: shaded
