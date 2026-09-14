@@ -125,21 +125,22 @@ struct FigmaGlass {
     /// Bar — Light 162°, Depth 37.97, Refraction 100, Frost 0, Dispersion 0.
     /// Lit along its upper edge.
     ///
-    /// Refraction is at its maximum and Depth is 65% of the bar's 58.5pt
-    /// thickness, which together say: almost all of this shape is edge. Hence
-    /// a 9pt rim on a 29pt half-thickness, rather than the hairline a smaller
-    /// Depth would give.
+    /// The rule that matters here: the highlight must never get bright enough
+    /// to match the page behind the bar. The body is only ~10 levels off
+    /// #F8F9FC, so a strong white edge does not read as glass — it makes the
+    /// top of the bar vanish into the background and the silhouette loses its
+    /// arc. Every stop stays well under that line.
     static let bar = FigmaGlass(
         lit: .top,
         shaded: .bottom,
-        rimWidth: 9.0,
+        rimWidth: 4.0,
         depth: 37.97,
         strength: 0.8,
         // The peak sits just inside the edge, not on it. Starting at full
         // brightness draws a hard white line along the top of the bar;
         // ramping into it reads as a surface turning into the light.
-        rimStops: [(0.00, 0.48), (0.14, 0.72), (0.48, 0.20), (0.80, 0.05), (1.00, 0.46)],
-        sheenStops: [(0.00, 0.66), (0.34, 0.30), (0.70, 0.06), (1.00, 0.14)]
+        rimStops: [(0.00, 0.30), (0.15, 0.38), (0.55, 0.10), (1.00, 0.16)],
+        sheenStops: [(0.00, 0.22), (0.45, 0.06), (1.00, 0.00)]
     )
 
     /// Chip — Light −45°, Depth 21.7, Refraction 80, Frost 4.34, Dispersion 50.
@@ -156,11 +157,11 @@ struct FigmaGlass {
     static let chip = FigmaGlass(
         lit: .topLeading,
         shaded: .bottomTrailing,
-        rimWidth: 1.8,
+        rimWidth: 1.6,
         depth: 21.7,
         strength: 0.8,
-        rimStops: [(0.00, 0.95), (0.40, 0.30), (1.00, 0.42)],
-        sheenStops: [(0.00, 0.78), (0.55, 0.20), (1.00, 0.00)]
+        rimStops: [(0.00, 0.70), (0.45, 0.20), (1.00, 0.30)],
+        sheenStops: [(0.00, 0.55), (0.60, 0.12), (1.00, 0.00)]
     )
 
     /// The lit edge, hugging the inside of the outline.
