@@ -30,6 +30,7 @@
 		143084998D90EBD6FF9F10D4 /* mood-okay-blue.png in Resources */ = {isa = PBXBuildFile; fileRef = 7AE633A51644E6C1232417B8 /* mood-okay-blue.png */; };
 		8505FF5CC74EEB2154F61924 /* mood-okay.png in Resources */ = {isa = PBXBuildFile; fileRef = 77C59EC1A12C8A8D93BC3A3D /* mood-okay.png */; };
 		9632B5DD646F76DB9DE890A2 /* MoodCheckInView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F55EEF2297994D6C23E2F99C /* MoodCheckInView.swift */; };
+		1E08DF8D132B242FB9FB9D0F /* MoodMascot.swift in Sources */ = {isa = PBXBuildFile; fileRef = A39792C997321848F66BDB1D /* MoodMascot.swift */; };
 		56B5A5E1A1940F38FE0AF4D0 /* MoodWord.swift in Sources */ = {isa = PBXBuildFile; fileRef = 61C189D37A564069EAEEB496 /* MoodWord.swift */; };
 		16D7BBF630D761FA08BAAB77 /* ArcGeometry.swift in Sources */ = {isa = PBXBuildFile; fileRef = F50E2537898C3C70DAA887A4 /* ArcGeometry.swift */; };
 		111E9DC9621C4D33D8FB97D9 /* LensCanvas.swift in Sources */ = {isa = PBXBuildFile; fileRef = A75B6A573D72898B83D9DBDA /* LensCanvas.swift */; };
@@ -65,6 +66,7 @@
 		7AE633A51644E6C1232417B8 /* mood-okay-blue.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = mood-okay-blue.png; sourceTree = "<group>"; };
 		77C59EC1A12C8A8D93BC3A3D /* mood-okay.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = mood-okay.png; sourceTree = "<group>"; };
 		F55EEF2297994D6C23E2F99C /* MoodCheckInView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MoodCheckInView.swift; sourceTree = "<group>"; };
+		A39792C997321848F66BDB1D /* MoodMascot.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MoodMascot.swift; sourceTree = "<group>"; };
 		61C189D37A564069EAEEB496 /* MoodWord.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MoodWord.swift; sourceTree = "<group>"; };
 		F50E2537898C3C70DAA887A4 /* ArcGeometry.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ArcGeometry.swift; sourceTree = "<group>"; };
 		A75B6A573D72898B83D9DBDA /* LensCanvas.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LensCanvas.swift; sourceTree = "<group>"; };
@@ -156,6 +158,7 @@
 			isa = PBXGroup;
 			children = (
 				F55EEF2297994D6C23E2F99C /* MoodCheckInView.swift */,
+				A39792C997321848F66BDB1D /* MoodMascot.swift */,
 				61C189D37A564069EAEEB496 /* MoodWord.swift */,
 			);
 			path = Screen;
@@ -282,6 +285,7 @@
 				35C5BBB0AA11A33A8B6172E4 /* MoodScale.swift in Sources */,
 				F32A4261B3D7CEABA5272E05 /* MoodApp.swift in Sources */,
 				9632B5DD646F76DB9DE890A2 /* MoodCheckInView.swift in Sources */,
+				1E08DF8D132B242FB9FB9D0F /* MoodMascot.swift in Sources */,
 				56B5A5E1A1940F38FE0AF4D0 /* MoodWord.swift in Sources */,
 				16D7BBF630D761FA08BAAB77 /* ArcGeometry.swift in Sources */,
 				111E9DC9621C4D33D8FB97D9 /* LensCanvas.swift in Sources */,

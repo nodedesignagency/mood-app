@@ -140,25 +140,11 @@ struct MoodCheckInView: View {
             .animation(MoodMotion.follow(isDragging), value: progress)
     }
 
-    /// The mascot.
-    ///
-    /// Keyed on the image itself rather than on the mood: while every mood
-    /// shares one drawing, the key does not change and nothing cross-fades a
-    /// picture with itself. It starts cross-fading on its own the moment the
-    /// moods have different artwork.
+    /// The mascot. How one mood's drawing becomes the next is `MoodMascot`'s
+    /// business; the screen supplies the position and the curve.
     private var mascot: some View {
-        Group {
-            if let art = Art.mascot(mood) {
-                Image(uiImage: art)
-                    .resizable()
-                    .scaledToFit()
-                    .id(ObjectIdentifier(art))
-                    .transition(.opacity)
-                    .animation(.easeInOut(duration: 0.22), value: mood.id)
-            } else {
-                MoodFace(progress: progress, size: 190, color: MoodScale.accent(at: progress))
-            }
-        }
+        MoodMascot(progress: progress)
+            .animation(MoodMotion.follow(isDragging), value: progress)
     }
 
     /// Continue: the file's 70% white capsule, with its glass edge drawn by
