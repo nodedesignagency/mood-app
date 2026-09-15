@@ -132,20 +132,12 @@ struct MoodCheckInView: View {
     }
 
     private var moodLabel: some View {
-        // How one word becomes the next is `MoodWord`'s business. What the
-        // screen supplies is which word, what colour, and how far the thumb
-        // has got between two moods.
-        MoodWord(mood: mood, crossing: crossing)
+        // A drum carrying all five words, turned by `progress` — see
+        // `MoodWord`. It takes the position rather than the word, and each
+        // word brings its own mood's colour, so there is no tint to set here.
+        MoodWord(progress: progress)
             .font(.system(size: 44, weight: .bold, design: .rounded))
-            .foregroundStyle(MoodScale.accent(at: progress))
             .animation(MoodMotion.follow(isDragging), value: progress)
-    }
-
-    /// How far the thumb is between two moods: 0 sitting on one, 1 exactly
-    /// half way between two — which is also the point at which the word it
-    /// names changes.
-    private var crossing: Double {
-        min(1, abs(progress - progress.rounded()) * 2)
     }
 
     /// The mascot.
