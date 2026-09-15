@@ -1,13 +1,24 @@
 import SwiftUI
 
-/// Horizontal gutter for the screen's text content.
-private let SPACING_GUTTER: CGFloat = 20
-
 /// The daily check-in.
 ///
-/// Layout follows the Figma mockup: greeting, question, mascot, mood word,
-/// Continue, hint, bar. Sizes and colours marked PLACEHOLDER are read off the
-/// mockup image rather than the Figma file — see apple/README.md.
+/// Laid out in the Figma artboard's own coordinates — the "Active state"
+/// frame, 393 × 852 — and scaled once to fit the device, so every number
+/// below can be read straight off the file and checked against it.
+///
+/// This was tried once as a stack of springs and paddings and abandoned:
+/// the file overlaps things a stack cannot. The mascot's box runs from 184
+/// to 576 while the mood word sits at 528, inside it, over the transparent
+/// lower corner of the artwork. A stack has to put one after the other, and
+/// the sum does not fit on any iPhone — which is why the mascot had been
+/// shrunk from 392 to 260.
+///
+/// Children are placed with `position`, which works in the parent's own
+/// coordinates and takes the space it is offered. An earlier attempt used
+/// `offset` inside a `topLeading` stack instead; the stack then sized itself
+/// to its tallest child rather than the artboard, and the frame around it
+/// centred that — dropping everything 230 points down the screen and pushing
+/// the bar off the bottom. `position` has no such trap.
 struct MoodCheckInView: View {
     /// Continuous position along the bar, 0…4. The single source of truth.
     @State private var progress: Double = 2
@@ -17,103 +28,116 @@ struct MoodCheckInView: View {
     private var mood: Mood { MoodScale.nearest(to: progress) }
 
     var body: some View {
-        ZStack {
-            backdrop
-
-            VStack(spacing: 0) {
-                Text("Hey, \(greetingName) 👋")
-                    .font(.system(size: 15, weight: .medium, design: .rounded))
-                    .foregroundStyle(.secondary)
-                    .padding(.top, 8)
-
-                Text("How Are You\nFeeling Today?")
-                    .font(.system(size: 32, weight: .bold, design: .rounded))
-                    .multilineTextAlignment(.center)
-                    .foregroundStyle(.primary)
-                    .padding(.top, 10)
-
-                Spacer(minLength: 12)
-
-                mascot
-
-                Spacer(minLength: 12)
-
-                Text(mood.label)
-                    .font(.system(size: 40, weight: .bold, design: .rounded))
-                    .foregroundStyle(MoodScale.accent(at: progress))
-                    .contentTransition(.numericText())
-                    .animation(.snappy(duration: 0.25), value: mood.id)
-
-                continueButton
-                    .padding(.top, 14)
-
-                hint
-                    .padding(.top, 26)
-
-                MoodArcBar(progress: $progress)
-                    .padding(.top, 10)
-                    // The bar carries its own 5pt side inset, measured from
-                    // the frame, so it has to escape the stack's gutter.
-                    .padding(.horizontal, -SPACING_GUTTER)
-            }
-            .padding(.horizontal, SPACING_GUTTER)
-        }
-    }
-
-    // MARK: - Pieces
-
-    /// The app's background colour, with a mood-tinted bloom over it.
-    ///
-    /// The flat colour matters more than it looks: the bar's fill is E9EDF4 at
-    /// 60%, so it lands about ten levels off whatever sits behind it. On pure
-    /// white that reads as no colour at all; on F8F9FC it reads.
-    private var backdrop: some View {
         GeometryReader { proxy in
-            // Everything about the glow is fixed in the file, so the only
-            // thing to work out is scale: artboard units multiplied by how
-            // much wider this screen is than the 393 it was drawn for.
-            let scale = proxy.size.width / Figma.artboard.width
-            let size = proxy.size
+            // One uniform factor, so nothing distorts. The artboard's aspect
+            // (393:852) is within half a percent of every iPhone this targets,
+            // so the slack is a point or two, not a letterbox.
+            let scale = min(proxy.size.width / Figma.artboard.width,
+                            proxy.size.height / Figma.artboard.height)
 
             ZStack {
+                // Behind the artboard as well as inside it, so the point or
+                // two of slack at the edges is the page colour and not black.
                 Figma.background
 
-                Circle()
-                    .fill(Figma.glowFill)
-                    .frame(
-                        width: Figma.glowDiameter * scale,
-                        height: Figma.glowDiameter * scale
-                    )
-                    .blur(radius: Figma.glowBlur * scale)
-                    .position(
-                        x: size.width * Figma.glowCentre.x,
-                        y: size.height * Figma.glowCentre.y
-                    )
-
-                if let rays = Art.rays {
-                    Image(uiImage: rays)
-                        .resizable()
-                        .frame(
-                            width: Figma.raysSize.width * scale,
-                            height: Figma.raysSize.height * scale
-                        )
-                        .blendMode(.softLight)
-                        .position(
-                            x: size.width * Figma.raysCentre.x,
-                            y: size.height * Figma.raysCentre.y
-                        )
-                }
+                artboard
+                    .frame(width: Figma.artboard.width, height: Figma.artboard.height)
+                    .scaleEffect(scale)
+                    .position(x: proxy.size.width / 2, y: proxy.size.height / 2)
             }
         }
         .ignoresSafeArea()
     }
 
+    // MARK: - Layout
+
+    /// Frames measured off the file. Text sits in full-width slots rather than
+    /// its own measured box, so a longer name or mood word cannot clip; the
+    /// centres are the same either way, since all of it is centred on the
+    /// artboard. The question keeps its 273 because that is what wraps it.
+    private var artboard: some View {
+        ZStack {
+            // Inside the artboard too, so the glow's soft light has something
+            // to blend against rather than transparency.
+            Figma.background
+            glow
+
+            place(x: 0, y: 80, w: 393, h: 16) { greeting }
+            place(x: 60, y: 104, w: 273, h: 84) { question }
+            place(x: 0, y: 184, w: 393, h: 392) { mascot }
+            place(x: 0, y: 528, w: 393, h: 57) { moodLabel }
+            place(x: 132, y: 588, w: 128.45, h: 49.45) { continueButton }
+            place(x: 0, y: 699, w: 393, h: 30) { hint }
+            place(x: 0, y: 744, w: 393, h: BarLayout.frameHeight) {
+                // The bar carries its own 5pt side inset, measured from its
+                // frame, so it takes the full artboard width.
+                MoodArcBar(progress: $progress)
+            }
+        }
+    }
+
+    /// Place a view at a frame measured off the artboard.
+    private func place<V: View>(
+        x: CGFloat, y: CGFloat, w: CGFloat, h: CGFloat,
+        @ViewBuilder _ content: () -> V
+    ) -> some View {
+        content()
+            .frame(width: w, height: h)
+            .position(x: x + w / 2, y: y + h / 2)
+    }
+
+    // MARK: - Pieces
+
+    /// Frame 2147226789 — see the Glow section of `Figma` for what is in it
+    /// and what was left out.
+    private var glow: some View {
+        ZStack {
+            Circle()
+                .fill(Figma.glowFill)
+                .frame(width: Figma.glowDiameter, height: Figma.glowDiameter)
+                .blur(radius: Figma.glowBlur)
+                .position(Figma.glowCentre)
+
+            if let rays = Art.rays {
+                Image(uiImage: rays)
+                    .resizable()
+                    .frame(width: Figma.raysSize.width, height: Figma.raysSize.height)
+                    .blendMode(.softLight)
+                    .position(Figma.raysCentre)
+            }
+        }
+    }
+
+    private var greeting: some View {
+        Text("Hey, \(greetingName) 👋")
+            .font(.system(size: 14, weight: .regular, design: .rounded))
+            .foregroundStyle(Figma.textMuted)
+    }
+
+    private var question: some View {
+        Text("How Are You\nFeeling Today?")
+            .font(.system(size: 32, weight: .medium, design: .rounded))
+            .tracking(-1.38)
+            .lineSpacing(Figma.questionLineSpacing)
+            .multilineTextAlignment(.center)
+            .foregroundStyle(Figma.textPrimary)
+    }
+
+    private var moodLabel: some View {
+        Text(mood.label)
+            .font(.system(size: 44, weight: .bold, design: .rounded))
+            .tracking(-1.38)
+            .foregroundStyle(Figma.accent)
+            .contentTransition(.numericText())
+            .animation(.snappy(duration: 0.25), value: mood.id)
+    }
+
     /// The mascot.
     ///
     /// Keyed on the image itself rather than on the mood: while every mood
-    /// shares one drawing, the key does not change and nothing cross-fades
-    /// a picture with itself. It starts cross-fading on its own the moment
-    /// the moods have different artwork.
+    /// shares one drawing, the key does not change and nothing cross-fades a
+    /// picture with itself. It starts cross-fading on its own the moment the
+    /// moods have different artwork.
     private var mascot: some View {
         Group {
             if let art = Art.mascot(mood) {
@@ -124,12 +148,15 @@ struct MoodCheckInView: View {
                     .transition(.opacity)
                     .animation(.easeInOut(duration: 0.22), value: mood.id)
             } else {
-                MoodFace(progress: progress, size: 190, color: MoodScale.accent(at: progress))
+                MoodFace(progress: progress, size: 190, color: Figma.accent)
             }
         }
-        .frame(maxWidth: 260, maxHeight: 260)
     }
 
+    /// Continue: the file's 70% white capsule, with its glass edge drawn by
+    /// the shader and its drop shadow. Not the system button style — that
+    /// draws its own material over the page, and on a near-white page it
+    /// comes out flat.
     private var continueButton: some View {
         Button {
             // Wire to the next step in the flow.
@@ -138,8 +165,9 @@ struct MoodCheckInView: View {
                 Text("Continue")
                 Image(systemName: "arrow.right")
             }
-            .font(.system(size: 17, weight: .semibold, design: .rounded))
-            .foregroundStyle(Figma.iconInk)
+            .font(.system(size: 18, weight: .semibold, design: .rounded))
+            .tracking(-0.18)
+            .foregroundStyle(Figma.textPrimary)
             .frame(width: Figma.buttonSize.width, height: Figma.buttonSize.height)
             .background {
                 Capsule()
@@ -151,13 +179,19 @@ struct MoodCheckInView: View {
         .buttonStyle(.plain)
     }
 
+    /// The hint. Its icon is 30 wide and the words start at 31, so they sit
+    /// a point apart.
     private var hint: some View {
-        HStack(spacing: 7) {
-            Image(systemName: "hand.point.up.left")
+        HStack(spacing: 1) {
+            if let icon = Art.hintSwipe {
+                Image(uiImage: icon)
+                    .resizable()
+                    .frame(width: 30, height: 30)
+            }
             Text("Swipe to select mood")
+                .font(.system(size: 18, weight: .regular, design: .rounded))
+                .foregroundStyle(Figma.textMuted)
         }
-        .font(.system(size: 15, weight: .regular, design: .rounded))
-        .foregroundStyle(.secondary)
     }
 }
 

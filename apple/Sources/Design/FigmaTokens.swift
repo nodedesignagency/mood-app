@@ -135,10 +135,9 @@ enum Figma {
     // Composited over this page it moves a channel by at most 0.31 of 255 —
     // nothing anyone can see — for half a megabyte.
     //
-    // Positions are fractions of the artboard, and sizes are scaled by how
-    // much wider the real screen is than the 393 this was drawn for. The glow
-    // frame is 565 wide against a 393 artboard, so it bleeds off both edges
-    // on purpose.
+    // Positions are in artboard units, like everything else on this screen.
+    // The glow frame is 565 wide against a 393 artboard and starts at −86, so
+    // it bleeds off both edges on purpose.
 
     /// The artboard every measurement in this file comes from.
     static let artboard = CGSize(width: 393, height: 852)
@@ -151,12 +150,36 @@ enum Figma {
     static let glowBlur: CGFloat = 164.48 / 2
     /// Centre of Ellipse 2357 on the artboard, from the frame at (−86, 108)
     /// plus the ellipse's own (68.26, 94.58) and its 220.41 radius.
-    static let glowCentre = UnitPoint(x: 202.67 / 393, y: 422.98 / 852)
+    static let glowCentre = CGPoint(x: 202.67, y: 422.98)
 
     /// The rays' render is larger than the 565 × 592.396 layer, because it
     /// carries its own blur bleed: 2.91% and 2.78% past each edge.
     static let raysSize = CGSize(width: 597.897, height: 625.293)
-    static let raysCentre = UnitPoint(x: 196.5 / 393, y: 404.2 / 852)
+    static let raysCentre = CGPoint(x: 196.5, y: 404.2)
+
+    // MARK: - Type
+    //
+    // The file is set in SN Pro; the app draws in SF Pro Rounded, which is
+    // free on the platform and close in character. Only the sizes, weights,
+    // tracking and colours are carried across — the shapes will differ
+    // slightly and are meant to.
+    //
+    //   greeting   Regular 14 / 16, tracking 0,        787878
+    //   question   Medium 32 / auto, tracking −1.38,   222222
+    //   mood word  Bold 44 / auto, tracking −1.38,     3169EC
+    //   Continue   SemiBold 18 / auto, tracking −1%,   222222
+    //   hint       Regular 18 / 21, tracking 0,        787878
+
+    /// Headings and body. The same 222222 as the bar's icons.
+    static let textPrimary = Color(hex: 0x222222)
+    /// The greeting and the hint.
+    static let textMuted = Color(hex: 0x787878)
+    /// The one accent — the mood word, and the selected face's blue.
+    static let accent = Color(hex: 0x3169EC)
+
+    /// The question's box is 84 tall over two lines, so 42 a line. SF Rounded
+    /// sets 32pt at about 38, so the rest is added as leading.
+    static let questionLineSpacing: CGFloat = 4
 
     // MARK: - Icons
 

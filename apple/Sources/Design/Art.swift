@@ -20,6 +20,11 @@ enum Art {
     /// The sunburst behind the mascot — Figma's own render of "Star 2".
     static let rays = UIImage(named: "glow-rays")
 
+    /// The hand in the hint line. The file has it as an SVG, which iOS will
+    /// not load from a loose bundle file, so it ships rasterised at 3× with
+    /// its 787878 already baked in — the same grey as the words beside it.
+    static let hintSwipe = UIImage(named: "hint-swipe")
+
     private static let faces: [Int: (resting: UIImage, blue: UIImage)] = {
         var found: [Int: (resting: UIImage, blue: UIImage)] = [:]
         for mood in MoodScale.all {
