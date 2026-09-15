@@ -120,6 +120,44 @@ enum Figma {
     static let buttonSize = CGSize(width: 128.45, height: 49.45)
     static let buttonGap: CGFloat = 6
 
+    // MARK: - Glow behind the mascot — frame "Frame 2147226789"
+    //
+    // The file stacks three layers here. Two are reproduced:
+    //
+    //   Ellipse 2357   #C5E0FF, 440.815 across, Layer blur 164.48.
+    //   Star 2         a 40-point star under a 30-stop angular gradient,
+    //                  Layer blur 16.45, blended soft light. Figma's own
+    //                  render of it ships as `glow-rays`, rather than the
+    //                  shape being rebuilt: the gradient *is* the look, and
+    //                  most of its stops are not readable from the panel.
+    //
+    // The third, a grain texture at soft light 25%, is deliberately left out.
+    // Composited over this page it moves a channel by at most 0.31 of 255 —
+    // nothing anyone can see — for half a megabyte.
+    //
+    // Positions are fractions of the artboard, and sizes are scaled by how
+    // much wider the real screen is than the 393 this was drawn for. The glow
+    // frame is 565 wide against a 393 artboard, so it bleeds off both edges
+    // on purpose.
+
+    /// The artboard every measurement in this file comes from.
+    static let artboard = CGSize(width: 393, height: 852)
+
+    static let glowFill = Color(hex: 0xC5E0FF)
+    static let glowDiameter: CGFloat = 440.815
+    /// Figma's Layer blur is about twice the Gaussian sigma — the same halving
+    /// the chip's shadow needs. The exported SVG agrees: 164.48 comes across
+    /// as `stdDeviation="82.2416"`.
+    static let glowBlur: CGFloat = 164.48 / 2
+    /// Centre of Ellipse 2357 on the artboard, from the frame at (−86, 108)
+    /// plus the ellipse's own (68.26, 94.58) and its 220.41 radius.
+    static let glowCentre = UnitPoint(x: 202.67 / 393, y: 422.98 / 852)
+
+    /// The rays' render is larger than the 565 × 592.396 layer, because it
+    /// carries its own blur bleed: 2.91% and 2.78% past each edge.
+    static let raysSize = CGSize(width: 597.897, height: 625.293)
+    static let raysCentre = UnitPoint(x: 196.5 / 393, y: 404.2 / 852)
+
     // MARK: - Icons
 
     /// From the chip's "Selection colors" swatch.

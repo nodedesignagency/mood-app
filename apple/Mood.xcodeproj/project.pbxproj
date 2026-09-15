@@ -7,9 +7,12 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		88FEC1F89DDCC387080E8FCC /* Art.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0BA488AC6D05261F82D32EFB /* Art.swift */; };
 		7C6E977050CF4D8D4858859D /* FigmaTokens.swift in Sources */ = {isa = PBXBuildFile; fileRef = 83E0BD940DE081A7720F6345 /* FigmaTokens.swift */; };
 		35C5BBB0AA11A33A8B6172E4 /* MoodScale.swift in Sources */ = {isa = PBXBuildFile; fileRef = DCD871B6A8AD67276C380474 /* MoodScale.swift */; };
 		F32A4261B3D7CEABA5272E05 /* MoodApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2EB864DE2DD7E2A1A88CEFA4 /* MoodApp.swift */; };
+		CCD4B43AD0CC47E46190310B /* glow-rays.png in Resources */ = {isa = PBXBuildFile; fileRef = CEF3A4FFA4BAD4EC9D67DD10 /* glow-rays.png */; };
+		02AD55BD246A9D33A187B98B /* mascot.png in Resources */ = {isa = PBXBuildFile; fileRef = D98C5ABCC6FC16F01789341A /* mascot.png */; };
 		8E99782AE7A45E6F34C0BA95 /* mood-awful-blue.png in Resources */ = {isa = PBXBuildFile; fileRef = 17207F32F8BCE7266385F37E /* mood-awful-blue.png */; };
 		F69DFAE3BAE44387556BA0DE /* mood-awful.png in Resources */ = {isa = PBXBuildFile; fileRef = 7A34AC503E5EC3CEEDEA5A50 /* mood-awful.png */; };
 		327A26BD8DF9DB6610AA11A9 /* mood-good-blue.png in Resources */ = {isa = PBXBuildFile; fileRef = 5CE8F505F21C2695571BB670 /* mood-good-blue.png */; };
@@ -32,9 +35,12 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
+		0BA488AC6D05261F82D32EFB /* Art.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Art.swift; sourceTree = "<group>"; };
 		83E0BD940DE081A7720F6345 /* FigmaTokens.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FigmaTokens.swift; sourceTree = "<group>"; };
 		DCD871B6A8AD67276C380474 /* MoodScale.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MoodScale.swift; sourceTree = "<group>"; };
 		2EB864DE2DD7E2A1A88CEFA4 /* MoodApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MoodApp.swift; sourceTree = "<group>"; };
+		CEF3A4FFA4BAD4EC9D67DD10 /* glow-rays.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = glow-rays.png; sourceTree = "<group>"; };
+		D98C5ABCC6FC16F01789341A /* mascot.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = mascot.png; sourceTree = "<group>"; };
 		17207F32F8BCE7266385F37E /* mood-awful-blue.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = mood-awful-blue.png; sourceTree = "<group>"; };
 		7A34AC503E5EC3CEEDEA5A50 /* mood-awful.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = mood-awful.png; sourceTree = "<group>"; };
 		5CE8F505F21C2695571BB670 /* mood-good-blue.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = mood-good-blue.png; sourceTree = "<group>"; };
@@ -100,6 +106,7 @@
 		3A585FA15D66223CDC83266F /* Design */ = {
 			isa = PBXGroup;
 			children = (
+				0BA488AC6D05261F82D32EFB /* Art.swift */,
 				83E0BD940DE081A7720F6345 /* FigmaTokens.swift */,
 				DCD871B6A8AD67276C380474 /* MoodScale.swift */,
 			);
@@ -109,6 +116,8 @@
 		A024F06580C79B7582C3806A /* Resources */ = {
 			isa = PBXGroup;
 			children = (
+				CEF3A4FFA4BAD4EC9D67DD10 /* glow-rays.png */,
+				D98C5ABCC6FC16F01789341A /* mascot.png */,
 				17207F32F8BCE7266385F37E /* mood-awful-blue.png */,
 				7A34AC503E5EC3CEEDEA5A50 /* mood-awful.png */,
 				5CE8F505F21C2695571BB670 /* mood-good-blue.png */,
@@ -219,6 +228,8 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				CCD4B43AD0CC47E46190310B /* glow-rays.png in Resources */,
+				02AD55BD246A9D33A187B98B /* mascot.png in Resources */,
 				8E99782AE7A45E6F34C0BA95 /* mood-awful-blue.png in Resources */,
 				F69DFAE3BAE44387556BA0DE /* mood-awful.png in Resources */,
 				327A26BD8DF9DB6610AA11A9 /* mood-good-blue.png in Resources */,
@@ -239,6 +250,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				88FEC1F89DDCC387080E8FCC /* Art.swift in Sources */,
 				7C6E977050CF4D8D4858859D /* FigmaTokens.swift in Sources */,
 				35C5BBB0AA11A33A8B6172E4 /* MoodScale.swift in Sources */,
 				F32A4261B3D7CEABA5272E05 /* MoodApp.swift in Sources */,

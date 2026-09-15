@@ -18,7 +18,7 @@ struct MoodIcon: View {
 
     var body: some View {
         Group {
-            if let art = Self.art[mood.id] {
+            if let art = Art.face(mood) {
                 ZStack {
                     // The resting face stays fully opaque underneath and the
                     // blue fades in over it. Fading the two against each other
@@ -39,24 +39,4 @@ struct MoodIcon: View {
         }
         .frame(width: size, height: size)
     }
-
-    /// The artwork, loaded once and held by mood id.
-    ///
-    /// Loaded through `UIImage(named:)` and handed over as an image rather
-    /// than named with `Image(_: String)`. The two are not documented to do
-    /// the same thing: `Image(_: String)` names an image *in an asset
-    /// catalogue*, and these are loose files copied into the bundle, which is
-    /// what `UIImage(named:)` is specified to search. Doing it here also means
-    /// the bundle is searched five times at launch instead of on every frame
-    /// of a drag.
-    private static let art: [Int: (resting: UIImage, blue: UIImage)] = {
-        var found: [Int: (resting: UIImage, blue: UIImage)] = [:]
-        for mood in MoodScale.all {
-            if let resting = UIImage(named: mood.icon),
-               let blue = UIImage(named: mood.iconSelected) {
-                found[mood.id] = (resting, blue)
-            }
-        }
-        return found
-    }()
 }

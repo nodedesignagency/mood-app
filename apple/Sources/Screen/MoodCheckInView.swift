@@ -68,31 +68,59 @@ struct MoodCheckInView: View {
     /// 60%, so it lands about ten levels off whatever sits behind it. On pure
     /// white that reads as no colour at all; on F8F9FC it reads.
     private var backdrop: some View {
-        ZStack {
-            Figma.background
-            RadialGradient(
-                colors: [MoodScale.glow(at: progress).opacity(0.9), .clear],
-                center: .init(x: 0.5, y: 0.42),
-                startRadius: 0,
-                endRadius: 320
-            )
-            .animation(.easeOut(duration: 0.25), value: progress)
+        GeometryReader { proxy in
+            // Everything about the glow is fixed in the file, so the only
+            // thing to work out is scale: artboard units multiplied by how
+            // much wider this screen is than the 393 it was drawn for.
+            let scale = proxy.size.width / Figma.artboard.width
+            let size = proxy.size
+
+            ZStack {
+                Figma.background
+
+                Circle()
+                    .fill(Figma.glowFill)
+                    .frame(
+                        width: Figma.glowDiameter * scale,
+                        height: Figma.glowDiameter * scale
+                    )
+                    .blur(radius: Figma.glowBlur * scale)
+                    .position(
+                        x: size.width * Figma.glowCentre.x,
+                        y: size.height * Figma.glowCentre.y
+                    )
+
+                if let rays = Art.rays {
+                    Image(uiImage: rays)
+                        .resizable()
+                        .frame(
+                            width: Figma.raysSize.width * scale,
+                            height: Figma.raysSize.height * scale
+                        )
+                        .blendMode(.softLight)
+                        .position(
+                            x: size.width * Figma.raysCentre.x,
+                            y: size.height * Figma.raysCentre.y
+                        )
+                }
+            }
         }
         .ignoresSafeArea()
     }
 
-    /// PLACEHOLDER for the rendered character.
+    /// The mascot.
     ///
-    /// Drop `mascot-<key>` images into Assets and this picks them up. When the
-    /// mascot videos land, swap this for a scrubbed `AVPlayer` layer driven off
-    /// `progress` — the surrounding layout does not change.
+    /// Keyed on the image itself rather than on the mood: while every mood
+    /// shares one drawing, the key does not change and nothing cross-fades
+    /// a picture with itself. It starts cross-fading on its own the moment
+    /// the moods have different artwork.
     private var mascot: some View {
         Group {
-            if UIImage(named: mood.mascot) != nil {
-                Image(mood.mascot)
+            if let art = Art.mascot(mood) {
+                Image(uiImage: art)
                     .resizable()
                     .scaledToFit()
-                    .id(mood.id)
+                    .id(ObjectIdentifier(art))
                     .transition(.opacity)
                     .animation(.easeInOut(duration: 0.22), value: mood.id)
             } else {
@@ -102,10 +130,6 @@ struct MoodCheckInView: View {
         .frame(maxWidth: 260, maxHeight: 260)
     }
 
-    /// Continue: the file's 70% white capsule, with its glass edge drawn by
-    /// the shader and its drop shadow. Not the system button style — that
-    /// draws its own material over the page, and on a near-white page it
-    /// comes out flat.
     private var continueButton: some View {
         Button {
             // Wire to the next step in the flow.
