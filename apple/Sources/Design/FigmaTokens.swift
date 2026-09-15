@@ -142,6 +142,9 @@ enum Figma {
     /// The artboard every measurement in this file comes from.
     static let artboard = CGSize(width: 393, height: 852)
 
+    /// Figma's fixed glow colour. It is Okay's, and lives in `MoodScale`
+    /// alongside the other four now that every mood has one; kept here as
+    /// the record of what the file says.
     static let glowFill = Color(hex: 0xC5E0FF)
     static let glowDiameter: CGFloat = 440.815
     /// Figma's Layer blur is about twice the Gaussian sigma — the same halving
@@ -174,7 +177,9 @@ enum Figma {
     static let textPrimary = Color(hex: 0x222222)
     /// The greeting and the hint.
     static let textMuted = Color(hex: 0x787878)
-    /// The one accent — the mood word, and the selected face's blue.
+    /// The blue the face artwork is drawn in, and Okay's accent. The mood
+    /// word takes its colour from `MoodScale` instead, so it carries the
+    /// mood; this is what the two agree on at Okay.
     static let accent = Color(hex: 0x3169EC)
 
     /// The question's box is 84 tall over two lines, so 42 a line. SF Rounded

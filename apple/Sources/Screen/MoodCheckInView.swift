@@ -22,6 +22,9 @@ import SwiftUI
 struct MoodCheckInView: View {
     /// Continuous position along the bar, 0…4. The single source of truth.
     @State private var progress: Double = 2
+    /// True while a thumb is on the bar. Held here rather than in the bar so
+    /// the glow and the mood word can move on the same curve as the chip.
+    @State private var isDragging = false
 
     var greetingName = "Jimmy"
 
@@ -71,7 +74,7 @@ struct MoodCheckInView: View {
             place(x: 0, y: 744, w: 393, h: BarLayout.frameHeight) {
                 // The bar carries its own 5pt side inset, measured from its
                 // frame, so it takes the full artboard width.
-                MoodArcBar(progress: $progress)
+                MoodArcBar(progress: $progress, isDragging: $isDragging)
             }
         }
     }
@@ -90,10 +93,14 @@ struct MoodCheckInView: View {
 
     /// Frame 2147226789 — see the Glow section of `Figma` for what is in it
     /// and what was left out.
+    ///
+    /// The file gives one fixed #C5E0FF, which is Okay's. Every mood has its
+    /// own, blended continuously, so the whole page carries the mood and not
+    /// just the word.
     private var glow: some View {
         ZStack {
             Circle()
-                .fill(Figma.glowFill)
+                .fill(MoodScale.glow(at: progress))
                 .frame(width: Figma.glowDiameter, height: Figma.glowDiameter)
                 .blur(radius: Figma.glowBlur)
                 .position(Figma.glowCentre)
@@ -106,6 +113,7 @@ struct MoodCheckInView: View {
                     .position(Figma.raysCentre)
             }
         }
+        .animation(MoodMotion.follow(isDragging), value: progress)
     }
 
     private var greeting: some View {
@@ -127,9 +135,12 @@ struct MoodCheckInView: View {
         Text(mood.label)
             .font(.system(size: 44, weight: .bold, design: .rounded))
             .tracking(-1.38)
-            .foregroundStyle(Figma.accent)
+            .foregroundStyle(MoodScale.accent(at: progress))
             .contentTransition(.numericText())
-            .animation(.snappy(duration: 0.25), value: mood.id)
+            // One animation, not two. The word swap and the colour sweep ride
+            // the same spring, so they cannot disagree about when the mood
+            // changed.
+            .animation(MoodMotion.follow(isDragging), value: progress)
     }
 
     /// The mascot.
@@ -148,7 +159,7 @@ struct MoodCheckInView: View {
                     .transition(.opacity)
                     .animation(.easeInOut(duration: 0.22), value: mood.id)
             } else {
-                MoodFace(progress: progress, size: 190, color: Figma.accent)
+                MoodFace(progress: progress, size: 190, color: MoodScale.accent(at: progress))
             }
         }
     }

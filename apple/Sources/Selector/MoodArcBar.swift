@@ -22,7 +22,9 @@ struct MoodArcBar: View {
     /// Fires once the chip has settled after release.
     var onSettle: (Int) -> Void = { _ in }
 
-    @State private var isDragging = false
+    /// 1 while a thumb is down. Owned by the screen, so the glow and the
+    /// mood word can move on the same curve as the chip.
+    @Binding var isDragging: Bool
 
     /// Nearest stop, recomputed continuously — drives the haptic and the label.
     private var nearest: Int {
@@ -57,15 +59,7 @@ struct MoodArcBar: View {
             .frame(width: proxy.size.width, height: geo.height)
             .contentShape(Rectangle())
             .gesture(drag(geo: geo))
-            // Tracking springs tight so the chip feels welded to the thumb;
-            // the release spring is looser and overshoots slightly, which is
-            // what gives the snap its weight.
-            .animation(
-                isDragging
-                    ? .interactiveSpring(response: 0.20, dampingFraction: 0.86)
-                    : .spring(response: 0.42, dampingFraction: 0.62),
-                value: progress
-            )
+            .animation(MoodMotion.follow(isDragging), value: progress)
             // The swell on press and the settle on release.
             .animation(.spring(response: 0.28, dampingFraction: 0.72), value: isDragging)
         }
@@ -127,7 +121,9 @@ struct MoodArcBar: View {
         // disambiguate against.
         DragGesture(minimumDistance: 0)
             .onChanged { value in
-                isDragging = true
+                // Only on the way in: this is a binding now, and writing it
+                // on every touch event would redraw the screen for nothing.
+                if !isDragging { isDragging = true }
                 progress = geo.index(atX: value.location.x)
             }
             .onEnded { _ in

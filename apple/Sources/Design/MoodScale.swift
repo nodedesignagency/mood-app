@@ -27,19 +27,29 @@ struct Mood: Identifiable, Equatable {
 }
 
 enum MoodScale {
-    // PLACEHOLDER COLOURS — read off the mockup, not from the Figma file.
-    // Replace with the real values (see apple/README.md).
+    // Derived in OKLCH from the two colours the file actually specifies —
+    // the mood word's 3169EC and the glow's C5E0FF — so Okay is Figma's
+    // exactly and the other four are the same colour at other hues.
+    //
+    // Lightness and chroma are not held constant across the ramp. They can't
+    // be: a gold at the blue's lightness comes out brown, and a violet at the
+    // gold's washes out. They are set per hue so all five read equally vivid.
+    //
+    // Each glow keeps its accent's hue less 11.6°, at 1.6× the lightness and
+    // a quarter of the chroma — the relationship C5E0FF already has to
+    // 3169EC. Adjacent moods therefore sit close and the ends read apart,
+    // which is the right way round for something a thumb sweeps through.
     static let all: [Mood] = [
         Mood(id: 0, key: "awful", label: "Awful",
-             accent: Color(hex: 0x6C63C7), glow: Color(hex: 0xD9D6F5), mascot: "mascot-awful"),
+             accent: Color(hex: 0x6A43C4), glow: Color(hex: 0xD6DAFF), mascot: "mascot-awful"),
         Mood(id: 1, key: "low", label: "Low",
-             accent: Color(hex: 0x4C9FDE), glow: Color(hex: 0xD3E7F8), mascot: "mascot-low"),
+             accent: Color(hex: 0x565BE1), glow: Color(hex: 0xCCDDFF), mascot: "mascot-low"),
         Mood(id: 2, key: "okay", label: "Okay",
-             accent: Color(hex: 0x0A7CFF), glow: Color(hex: 0xCFE4FA), mascot: "mascot-okay"),
+             accent: Color(hex: 0x3169EC), glow: Color(hex: 0xC5E0FF), mascot: "mascot-okay"),
         Mood(id: 3, key: "good", label: "Good",
-             accent: Color(hex: 0x2FBF71), glow: Color(hex: 0xD4F0DF), mascot: "mascot-good"),
+             accent: Color(hex: 0x00AE67), glow: Color(hex: 0xC8E7C9), mascot: "mascot-good"),
         Mood(id: 4, key: "great", label: "Great",
-             accent: Color(hex: 0xFFB020), glow: Color(hex: 0xFCEBCB), mascot: "mascot-great"),
+             accent: Color(hex: 0xEFB300), glow: Color(hex: 0xF2D8B8), mascot: "mascot-great"),
     ]
 
     static let last = all.count - 1
@@ -66,7 +76,13 @@ enum MoodScale {
         let lower = Int(clamped)
         let upper = min(last, lower + 1)
         let t = clamped - Double(lower)
-        return channel(all[lower]).mix(with: channel(all[upper]), by: t)
+        // Smoothstepped, not linear. A straight blend changes colour at a
+        // constant rate and then turns a corner at every stop; that kink is
+        // the second thing that read as lurching. Easing to a stop at each
+        // end means the rate is zero exactly where a mood sits, so each one
+        // holds its own colour for a moment before handing over.
+        let eased = t * t * (3 - 2 * t)
+        return channel(all[lower]).mix(with: channel(all[upper]), by: eased)
     }
 }
 

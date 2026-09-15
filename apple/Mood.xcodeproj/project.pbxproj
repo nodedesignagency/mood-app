@@ -9,6 +9,7 @@
 /* Begin PBXBuildFile section */
 		88FEC1F89DDCC387080E8FCC /* Art.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0BA488AC6D05261F82D32EFB /* Art.swift */; };
 		7C6E977050CF4D8D4858859D /* FigmaTokens.swift in Sources */ = {isa = PBXBuildFile; fileRef = 83E0BD940DE081A7720F6345 /* FigmaTokens.swift */; };
+		8122384BE97B1AE9AF63A60A /* MoodMotion.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3BD39B641B939E5CA4B80733 /* MoodMotion.swift */; };
 		35C5BBB0AA11A33A8B6172E4 /* MoodScale.swift in Sources */ = {isa = PBXBuildFile; fileRef = DCD871B6A8AD67276C380474 /* MoodScale.swift */; };
 		F32A4261B3D7CEABA5272E05 /* MoodApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2EB864DE2DD7E2A1A88CEFA4 /* MoodApp.swift */; };
 		CCD4B43AD0CC47E46190310B /* glow-rays.png in Resources */ = {isa = PBXBuildFile; fileRef = CEF3A4FFA4BAD4EC9D67DD10 /* glow-rays.png */; };
@@ -38,6 +39,7 @@
 /* Begin PBXFileReference section */
 		0BA488AC6D05261F82D32EFB /* Art.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Art.swift; sourceTree = "<group>"; };
 		83E0BD940DE081A7720F6345 /* FigmaTokens.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FigmaTokens.swift; sourceTree = "<group>"; };
+		3BD39B641B939E5CA4B80733 /* MoodMotion.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MoodMotion.swift; sourceTree = "<group>"; };
 		DCD871B6A8AD67276C380474 /* MoodScale.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MoodScale.swift; sourceTree = "<group>"; };
 		2EB864DE2DD7E2A1A88CEFA4 /* MoodApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MoodApp.swift; sourceTree = "<group>"; };
 		CEF3A4FFA4BAD4EC9D67DD10 /* glow-rays.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = glow-rays.png; sourceTree = "<group>"; };
@@ -110,6 +112,7 @@
 			children = (
 				0BA488AC6D05261F82D32EFB /* Art.swift */,
 				83E0BD940DE081A7720F6345 /* FigmaTokens.swift */,
+				3BD39B641B939E5CA4B80733 /* MoodMotion.swift */,
 				DCD871B6A8AD67276C380474 /* MoodScale.swift */,
 			);
 			path = Design;
@@ -256,6 +259,7 @@
 			files = (
 				88FEC1F89DDCC387080E8FCC /* Art.swift in Sources */,
 				7C6E977050CF4D8D4858859D /* FigmaTokens.swift in Sources */,
+				8122384BE97B1AE9AF63A60A /* MoodMotion.swift in Sources */,
 				35C5BBB0AA11A33A8B6172E4 /* MoodScale.swift in Sources */,
 				F32A4261B3D7CEABA5272E05 /* MoodApp.swift in Sources */,
 				9632B5DD646F76DB9DE890A2 /* MoodCheckInView.swift in Sources */,
