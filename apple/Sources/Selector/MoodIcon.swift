@@ -7,6 +7,10 @@ import SwiftUI
 /// from one face to the next continuously rather than switching it at the
 /// moment a mood is crossed.
 ///
+/// The art is ~148px square drawn into a 25.6pt frame, so it is downsampled
+/// hard; `.interpolation(.high)` is what keeps the strokes clean at that
+/// reduction rather than aliasing along their edges.
+///
 /// Until the artwork is in the bundle this falls back to the face drawn in
 /// `MoodFace`, tinted from ink toward the mood's accent by the same value, so
 /// the screen behaves identically with or without the assets.
@@ -25,8 +29,9 @@ struct MoodIcon: View {
                     // instead would leave the glyph half transparent at the
                     // midpoint of a drag, which reads as the face dimming
                     // rather than changing colour.
-                    Image(mood.icon).resizable().scaledToFit()
-                    Image(mood.iconSelected).resizable().scaledToFit().opacity(selected)
+                    Image(mood.icon).resizable().interpolation(.high).scaledToFit()
+                    Image(mood.iconSelected).resizable().interpolation(.high).scaledToFit()
+                        .opacity(selected)
                 }
             } else {
                 MoodFace(

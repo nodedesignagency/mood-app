@@ -1,10 +1,13 @@
 # Artwork
 
-Drop the PNGs in this folder. Nothing else to do — `genproj.py` picks up every
-`.png` under `Sources/` and copies it into the app bundle, so `Image("name")`
-finds it by filename without the extension.
+The bar's faces. `genproj.py` picks up every `.png` under `Sources/` and copies
+it into the app bundle, so `Image("name")` finds it by filename without the
+extension — nothing to register by hand.
 
-Ten files, named exactly like this:
+These came from "Mood 1 normal.png" … "Mood 5 blue.png" on the
+`claude/curved-mood-selector-ui-n0zom2` branch, renamed off each mood's `key`
+so they are found without a lookup table. Mood 1 is the saddest, Mood 5 the
+happiest, which is the order the scale is already in.
 
 | Mood | Resting | Selected (blue) |
 | --- | --- | --- |
@@ -17,9 +20,18 @@ Ten files, named exactly like this:
 The names come from each mood's `key` in `Design/MoodScale.swift`, so they stay
 in step if a mood is renamed.
 
-Export them square, transparent, and at roughly 3× the size they are drawn —
-the faces render at 25.6pt, so about 80px — or larger. They are drawn into a
-fixed frame, so a bigger export only costs file size, never layout.
+Square, transparent, black for the resting face and #3169EC for the selected
+one. The current set is 148px (132 for Okay), drawn into a 25.6pt frame, so
+there is plenty of resolution to spare.
+
+## Known problem: mood-awful-blue
+
+Every other blue is pixel-for-pixel its normal, recoloured. `mood-awful-blue`
+is not: its strokes are much heavier and its mouth wider, covering 2424 opaque
+pixels against the normal's 1423 across a visibly larger box. Because the blue
+is faded in *over* the normal, Awful's face thickens as it is selected, where
+the others only change colour. Re-export it from the same artboard as
+`mood-awful.png` and it will match.
 
 Until all ten are here the bar falls back to the faces drawn in
 `Selector/MoodFace.swift`, so the app always runs.

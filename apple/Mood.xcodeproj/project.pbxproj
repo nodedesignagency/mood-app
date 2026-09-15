@@ -10,6 +10,16 @@
 		7C6E977050CF4D8D4858859D /* FigmaTokens.swift in Sources */ = {isa = PBXBuildFile; fileRef = 83E0BD940DE081A7720F6345 /* FigmaTokens.swift */; };
 		35C5BBB0AA11A33A8B6172E4 /* MoodScale.swift in Sources */ = {isa = PBXBuildFile; fileRef = DCD871B6A8AD67276C380474 /* MoodScale.swift */; };
 		F32A4261B3D7CEABA5272E05 /* MoodApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2EB864DE2DD7E2A1A88CEFA4 /* MoodApp.swift */; };
+		8E99782AE7A45E6F34C0BA95 /* mood-awful-blue.png in Resources */ = {isa = PBXBuildFile; fileRef = 17207F32F8BCE7266385F37E /* mood-awful-blue.png */; };
+		F69DFAE3BAE44387556BA0DE /* mood-awful.png in Resources */ = {isa = PBXBuildFile; fileRef = 7A34AC503E5EC3CEEDEA5A50 /* mood-awful.png */; };
+		327A26BD8DF9DB6610AA11A9 /* mood-good-blue.png in Resources */ = {isa = PBXBuildFile; fileRef = 5CE8F505F21C2695571BB670 /* mood-good-blue.png */; };
+		A7E2E0625A30A13907658F3C /* mood-good.png in Resources */ = {isa = PBXBuildFile; fileRef = 47D72C40C8706649DB5F2BB1 /* mood-good.png */; };
+		19809105209D5473F35B194B /* mood-great-blue.png in Resources */ = {isa = PBXBuildFile; fileRef = 04F6E3E7F23E2FD631E214C8 /* mood-great-blue.png */; };
+		592A1AB1938DF8212A1D29CA /* mood-great.png in Resources */ = {isa = PBXBuildFile; fileRef = D4A484D67F5A9D5593747823 /* mood-great.png */; };
+		E925A2A8EE529E7629590C57 /* mood-low-blue.png in Resources */ = {isa = PBXBuildFile; fileRef = 79EB50225092B901448928DC /* mood-low-blue.png */; };
+		9DCCBC36A0237CBB3E5DB20B /* mood-low.png in Resources */ = {isa = PBXBuildFile; fileRef = 66E8C5B08AE7C7D75CA43600 /* mood-low.png */; };
+		143084998D90EBD6FF9F10D4 /* mood-okay-blue.png in Resources */ = {isa = PBXBuildFile; fileRef = 7AE633A51644E6C1232417B8 /* mood-okay-blue.png */; };
+		8505FF5CC74EEB2154F61924 /* mood-okay.png in Resources */ = {isa = PBXBuildFile; fileRef = 77C59EC1A12C8A8D93BC3A3D /* mood-okay.png */; };
 		9632B5DD646F76DB9DE890A2 /* MoodCheckInView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F55EEF2297994D6C23E2F99C /* MoodCheckInView.swift */; };
 		16D7BBF630D761FA08BAAB77 /* ArcGeometry.swift in Sources */ = {isa = PBXBuildFile; fileRef = F50E2537898C3C70DAA887A4 /* ArcGeometry.swift */; };
 		111E9DC9621C4D33D8FB97D9 /* LensCanvas.swift in Sources */ = {isa = PBXBuildFile; fileRef = A75B6A573D72898B83D9DBDA /* LensCanvas.swift */; };
@@ -25,6 +35,16 @@
 		83E0BD940DE081A7720F6345 /* FigmaTokens.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FigmaTokens.swift; sourceTree = "<group>"; };
 		DCD871B6A8AD67276C380474 /* MoodScale.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MoodScale.swift; sourceTree = "<group>"; };
 		2EB864DE2DD7E2A1A88CEFA4 /* MoodApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MoodApp.swift; sourceTree = "<group>"; };
+		17207F32F8BCE7266385F37E /* mood-awful-blue.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = mood-awful-blue.png; sourceTree = "<group>"; };
+		7A34AC503E5EC3CEEDEA5A50 /* mood-awful.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = mood-awful.png; sourceTree = "<group>"; };
+		5CE8F505F21C2695571BB670 /* mood-good-blue.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = mood-good-blue.png; sourceTree = "<group>"; };
+		47D72C40C8706649DB5F2BB1 /* mood-good.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = mood-good.png; sourceTree = "<group>"; };
+		04F6E3E7F23E2FD631E214C8 /* mood-great-blue.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = mood-great-blue.png; sourceTree = "<group>"; };
+		D4A484D67F5A9D5593747823 /* mood-great.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = mood-great.png; sourceTree = "<group>"; };
+		79EB50225092B901448928DC /* mood-low-blue.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = mood-low-blue.png; sourceTree = "<group>"; };
+		66E8C5B08AE7C7D75CA43600 /* mood-low.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = mood-low.png; sourceTree = "<group>"; };
+		7AE633A51644E6C1232417B8 /* mood-okay-blue.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = mood-okay-blue.png; sourceTree = "<group>"; };
+		77C59EC1A12C8A8D93BC3A3D /* mood-okay.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = mood-okay.png; sourceTree = "<group>"; };
 		F55EEF2297994D6C23E2F99C /* MoodCheckInView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MoodCheckInView.swift; sourceTree = "<group>"; };
 		F50E2537898C3C70DAA887A4 /* ArcGeometry.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ArcGeometry.swift; sourceTree = "<group>"; };
 		A75B6A573D72898B83D9DBDA /* LensCanvas.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LensCanvas.swift; sourceTree = "<group>"; };
@@ -68,6 +88,7 @@
 			isa = PBXGroup;
 			children = (
 				3A585FA15D66223CDC83266F /* Design */,
+				A024F06580C79B7582C3806A /* Resources */,
 				FBF563E807669EE7271963C1 /* Screen */,
 				BA0F826919BFC0873FE92A37 /* Selector */,
 				AA4969B211D51AF87F626DC3 /* Vendor */,
@@ -83,6 +104,23 @@
 				DCD871B6A8AD67276C380474 /* MoodScale.swift */,
 			);
 			path = Design;
+			sourceTree = "<group>";
+		};
+		A024F06580C79B7582C3806A /* Resources */ = {
+			isa = PBXGroup;
+			children = (
+				17207F32F8BCE7266385F37E /* mood-awful-blue.png */,
+				7A34AC503E5EC3CEEDEA5A50 /* mood-awful.png */,
+				5CE8F505F21C2695571BB670 /* mood-good-blue.png */,
+				47D72C40C8706649DB5F2BB1 /* mood-good.png */,
+				04F6E3E7F23E2FD631E214C8 /* mood-great-blue.png */,
+				D4A484D67F5A9D5593747823 /* mood-great.png */,
+				79EB50225092B901448928DC /* mood-low-blue.png */,
+				66E8C5B08AE7C7D75CA43600 /* mood-low.png */,
+				7AE633A51644E6C1232417B8 /* mood-okay-blue.png */,
+				77C59EC1A12C8A8D93BC3A3D /* mood-okay.png */,
+			);
+			path = Resources;
 			sourceTree = "<group>";
 		};
 		FBF563E807669EE7271963C1 /* Screen */ = {
@@ -181,6 +219,16 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				8E99782AE7A45E6F34C0BA95 /* mood-awful-blue.png in Resources */,
+				F69DFAE3BAE44387556BA0DE /* mood-awful.png in Resources */,
+				327A26BD8DF9DB6610AA11A9 /* mood-good-blue.png in Resources */,
+				A7E2E0625A30A13907658F3C /* mood-good.png in Resources */,
+				19809105209D5473F35B194B /* mood-great-blue.png in Resources */,
+				592A1AB1938DF8212A1D29CA /* mood-great.png in Resources */,
+				E925A2A8EE529E7629590C57 /* mood-low-blue.png in Resources */,
+				9DCCBC36A0237CBB3E5DB20B /* mood-low.png in Resources */,
+				143084998D90EBD6FF9F10D4 /* mood-okay-blue.png in Resources */,
+				8505FF5CC74EEB2154F61924 /* mood-okay.png in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
