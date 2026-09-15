@@ -1,6 +1,14 @@
 # Mood
 
-A daily mood check-in, built with Expo + React Native.
+A daily mood check-in.
+
+> **The app is `apple/`** — SwiftUI, iOS 26+. Everything below describes the
+> Expo / React Native version, which came first and is kept for reference: it
+> is no longer developed and does not track the iOS app. See `apple/README.md`.
+
+## The React Native version
+
+Built with Expo + React Native.
 
 This repo contains the **mood selector** screen in two design directions. The
 app opens on v2; the `V1 / V2` pill at the top switches between them on device
