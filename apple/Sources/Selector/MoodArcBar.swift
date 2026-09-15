@@ -98,6 +98,15 @@ struct MoodArcBar: View {
     /// slides over it, and the face turns blue as it arrives.
     private func stop(mood: Mood, geo: ArcGeometry) -> some View {
         MoodIcon(mood: mood, size: Figma.stopIconSize, selected: selection(of: mood))
+            // Lying along the bar, exactly as the chip does.
+            //
+            // The bar climbs and falls, so the chip turns to its tangent —
+            // 9.23° at Awful, 9.21° at Great, and 0.06° at Okay. The faces
+            // were left level, so at the ends a level face sat inside a
+            // capsule turned 9° away from it, and the space around it came out
+            // wedge-shaped: wide at one end, pinched at the other. Okay looked
+            // right because there is no tilt there to be out of.
+            .rotationEffect(geo.angle(at: Double(mood.id)))
             .position(geo.point(at: Double(mood.id)))
     }
 
