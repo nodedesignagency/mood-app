@@ -67,9 +67,14 @@ sunglasses).
 
 1254px square, transparent, drawn into a 392pt box on the artboard.
 
-**Awful does not stand on the same floor as the rest.** The four standing
-mascots land their feet within 3.1pt of each other, which is careful work. The
-melted one's lowest pixel is 31.3pt above that line, so it floats rather than
-lying on the floor the others stand on. Whether that is wanted is a design
-call, not a bug to be patched here — if it should sit on the floor, the fix is
-to move it down its canvas, the way the faces were.
+**They all stand on one floor.** The four standing mascots landed their feet
+within 3.1pt of each other as drawn, which is careful work. The melted one's
+lowest pixel was 31.3pt above that line, so it floated. That was tolerable
+while the mascot sat still; it is not once the character hops, because the hop
+makes the floor something you can see it leave and land on. Awful has been
+moved 97px down its canvas — 30.3pt as drawn — and all five now touch the same
+floor to within 3.1pt.
+
+If the set is ever re-exported, keep the lowest pixel of each drawing on a
+common row. `MoodMascot` also takes the feet from it: stretch and squash are
+anchored at 331 of the 392pt box, which is where that floor falls.
