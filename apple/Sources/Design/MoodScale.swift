@@ -27,29 +27,38 @@ struct Mood: Identifiable, Equatable {
 }
 
 enum MoodScale {
-    // Derived in OKLCH from the two colours the file actually specifies —
-    // the mood word's 3169EC and the glow's C5E0FF — so Okay is Figma's
-    // exactly and the other four are the same colour at other hues.
+    // Red for Awful through blue for Okay to a dark amber for Great, with
+    // Okay pinned to the two colours the file actually specifies — the mood
+    // word's 3169EC and the glow's C5E0FF. Hues run the short way round from
+    // red to blue (through magenta) and on to orange (through green), so a
+    // drag never passes through a colour that is not on the scale.
     //
-    // Lightness and chroma are not held constant across the ramp. They can't
-    // be: a gold at the blue's lightness comes out brown, and a violet at the
-    // gold's washes out. They are set per hue so all five read equally vivid.
+    // Each was solved, not picked. Lightness and chroma are set per hue to be
+    // the most vivid colour sRGB can hold that still clears about 4:1 against
+    // the backdrop it is actually read on. That backdrop is not the glow
+    // colour itself: the word sits 133 points below the glow's centre, where
+    // the blur has it at 79% over the page, so the measurement is taken
+    // there. Okay is the file's and comes out at 3.74:1, which is why the
+    // contrast looked thin — it is below 4.5 but above the 3:1 that applies
+    // to text this size, and it sets the standard the rest match.
     //
-    // Each glow keeps its accent's hue less 11.6°, at 1.6× the lightness and
-    // a quarter of the chroma — the relationship C5E0FF already has to
-    // 3169EC. Adjacent moods therefore sit close and the ends read apart,
-    // which is the right way round for something a thumb sweeps through.
+    // Green and amber are the dark ones because they have to be: sRGB holds
+    // very little chroma at a lightness dark enough to read on a pale tint,
+    // so pushing them brighter only clips and turns them muddy.
+    //
+    // Each glow keeps its accent's hue less 11.6° at 1.6x the lightness and a
+    // quarter of the chroma — the relationship C5E0FF already has to 3169EC.
     static let all: [Mood] = [
         Mood(id: 0, key: "awful", label: "Awful",
-             accent: Color(hex: 0x6A43C4), glow: Color(hex: 0xD6DAFF), mascot: "mascot-awful"),
+             accent: Color(hex: 0xD7001F), glow: Color(hex: 0xFDD0D3), mascot: "mascot-awful"),
         Mood(id: 1, key: "low", label: "Low",
-             accent: Color(hex: 0x565BE1), glow: Color(hex: 0xCCDDFF), mascot: "mascot-low"),
+             accent: Color(hex: 0x9D2FA8), glow: Color(hex: 0xE9D4F6), mascot: "mascot-low"),
         Mood(id: 2, key: "okay", label: "Okay",
              accent: Color(hex: 0x3169EC), glow: Color(hex: 0xC5E0FF), mascot: "mascot-okay"),
         Mood(id: 3, key: "good", label: "Good",
-             accent: Color(hex: 0x00AE67), glow: Color(hex: 0xC8E7C9), mascot: "mascot-good"),
+             accent: Color(hex: 0x007D5B), glow: Color(hex: 0xC3E8CF), mascot: "mascot-good"),
         Mood(id: 4, key: "great", label: "Great",
-             accent: Color(hex: 0xEFB300), glow: Color(hex: 0xF2D8B8), mascot: "mascot-great"),
+             accent: Color(hex: 0x975D00), glow: Color(hex: 0xF8D5BC), mascot: "mascot-great"),
     ]
 
     static let last = all.count - 1

@@ -136,10 +136,15 @@ struct MoodCheckInView: View {
             .font(.system(size: 44, weight: .bold, design: .rounded))
             .tracking(-1.38)
             .foregroundStyle(MoodScale.accent(at: progress))
-            .contentTransition(.numericText())
-            // One animation, not two. The word swap and the colour sweep ride
-            // the same spring, so they cannot disagree about when the mood
-            // changed.
+            // A crossfade, not `numericText`. That one interpolates glyph by
+            // glyph, because it is built for rolling digits — so between
+            // words of different lengths it blends letter positions, and a
+            // spring being retargeted a hundred times a second freezes it
+            // part-way. That is where "Loay" and "G kay" came from, and why
+            // it only looked right on a tap, which gives it one clean run.
+            // A crossfade has no glyphs to confuse: interrupt it and it just
+            // dissolves from wherever it had got to.
+            .contentTransition(.opacity)
             .animation(MoodMotion.follow(isDragging), value: progress)
     }
 
