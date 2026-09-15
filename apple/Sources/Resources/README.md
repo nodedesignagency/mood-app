@@ -24,5 +24,14 @@ Square, transparent, black for the resting face and #3169EC for the selected
 one. The current set is 148px (132 for Okay), drawn into a 25.6pt frame, so
 there is plenty of resolution to spare.
 
+**They have to share an eye line.** The app centres each file's *canvas* in the
+chip, so where a face appears is wherever the artist left it on that canvas —
+and the eyes are what the viewer reads as the face's position, not the ink's
+bounding box, which a drooping mouth or a wide grin changes. Awful and Great
+arrived 1.04pt low and 0.52pt high against the other three and read as badly
+spaced in the chip; both files were moved on their canvases to match. If any of
+these are re-exported, check the eye rows land together — the fix belongs in
+the Figma file, where the icons are not on a common baseline.
+
 Until all ten are here the bar falls back to the faces drawn in
 `Selector/MoodFace.swift`, so the app always runs.
