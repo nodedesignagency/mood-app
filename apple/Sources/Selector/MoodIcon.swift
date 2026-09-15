@@ -7,10 +7,6 @@ import SwiftUI
 /// from one face to the next continuously rather than switching it at the
 /// moment a mood is crossed.
 ///
-/// The art is ~148px square drawn into a 25.6pt frame, so it is downsampled
-/// hard; `.interpolation(.high)` is what keeps the strokes clean at that
-/// reduction rather than aliasing along their edges.
-///
 /// Until the artwork is in the bundle this falls back to the face drawn in
 /// `MoodFace`, tinted from ink toward the mood's accent by the same value, so
 /// the screen behaves identically with or without the assets.
@@ -22,15 +18,15 @@ struct MoodIcon: View {
 
     var body: some View {
         Group {
-            if Self.artwork.contains(mood.id) {
+            if let art = Self.art[mood.id] {
                 ZStack {
                     // The resting face stays fully opaque underneath and the
                     // blue fades in over it. Fading the two against each other
                     // instead would leave the glyph half transparent at the
                     // midpoint of a drag, which reads as the face dimming
                     // rather than changing colour.
-                    Image(mood.icon).resizable().interpolation(.high).scaledToFit()
-                    Image(mood.iconSelected).resizable().interpolation(.high).scaledToFit()
+                    Image(uiImage: art.resting).resizable().scaledToFit()
+                    Image(uiImage: art.blue).resizable().scaledToFit()
                         .opacity(selected)
                 }
             } else {
@@ -44,13 +40,23 @@ struct MoodIcon: View {
         .frame(width: size, height: size)
     }
 
-    /// The moods whose artwork is actually present, resolved once.
+    /// The artwork, loaded once and held by mood id.
     ///
-    /// A `static let` so the bundle is searched on first use and never again:
-    /// this is read for all five stops on every frame of a drag.
-    private static let artwork: Set<Int> = Set(
-        MoodScale.all
-            .filter { UIImage(named: $0.icon) != nil && UIImage(named: $0.iconSelected) != nil }
-            .map(\.id)
-    )
+    /// Loaded through `UIImage(named:)` and handed over as an image rather
+    /// than named with `Image(_: String)`. The two are not documented to do
+    /// the same thing: `Image(_: String)` names an image *in an asset
+    /// catalogue*, and these are loose files copied into the bundle, which is
+    /// what `UIImage(named:)` is specified to search. Doing it here also means
+    /// the bundle is searched five times at launch instead of on every frame
+    /// of a drag.
+    private static let art: [Int: (resting: UIImage, blue: UIImage)] = {
+        var found: [Int: (resting: UIImage, blue: UIImage)] = [:]
+        for mood in MoodScale.all {
+            if let resting = UIImage(named: mood.icon),
+               let blue = UIImage(named: mood.iconSelected) {
+                found[mood.id] = (resting, blue)
+            }
+        }
+        return found
+    }()
 }
