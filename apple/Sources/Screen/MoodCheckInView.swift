@@ -22,6 +22,10 @@ import SwiftUI
 struct MoodCheckInView: View {
     /// Continuous position along the bar, 0…4. The single source of truth.
     @State private var progress: Double = 2
+    /// The mood word's entrance: it starts a little small and displaced in
+    /// the direction the scale is moving, then springs home.
+    @State private var wordScale: CGFloat = 1
+    @State private var wordLift: CGFloat = 0
     /// True while a thumb is on the bar. Held here rather than in the bar so
     /// the glow and the mood word can move on the same curve as the chip.
     @State private var isDragging = false
@@ -146,6 +150,25 @@ struct MoodCheckInView: View {
             // dissolves from wherever it had got to.
             .contentTransition(.opacity)
             .animation(MoodMotion.follow(isDragging), value: progress)
+            // The crossfade alone is inert, so the word also arrives: a
+            // little small, and from below when the mood is rising or above
+            // when it is falling, springing home.
+            //
+            // Scale and offset are single continuous numbers, which is the
+            // whole point — a spring can retarget either of them from
+            // wherever it is, so being interrupted mid-drag costs nothing.
+            // That is what `numericText` could not do, and it is why this
+            // gets the movement back without getting the mangling back.
+            .scaleEffect(wordScale)
+            .offset(y: wordLift)
+            .onChange(of: mood.id, initial: false) { was, now in
+                wordLift = now > was ? 12 : -12
+                wordScale = 0.88
+                withAnimation(.spring(response: 0.34, dampingFraction: 0.62)) {
+                    wordLift = 0
+                    wordScale = 1
+                }
+            }
     }
 
     /// The mascot.

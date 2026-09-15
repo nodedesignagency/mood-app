@@ -42,9 +42,16 @@ enum MoodScale {
     // contrast looked thin — it is below 4.5 but above the 3:1 that applies
     // to text this size, and it sets the standard the rest match.
     //
-    // Green and amber are the dark ones because they have to be: sRGB holds
-    // very little chroma at a lightness dark enough to read on a pale tint,
-    // so pushing them brighter only clips and turns them muddy.
+    // Green is the dark one because it has to be: sRGB holds very little
+    // chroma at a lightness dark enough to read on a pale tint, so pushing it
+    // brighter only clips and turns it muddy.
+    //
+    // Great is the one place the 4:1 rule is relaxed, to 3.32:1, because at
+    // 4:1 there is no orange — dark orange *is* brown, and every colour that
+    // cleared the bar read as bronze. Moving its hue from 70 to 52 buys back
+    // some of it, since sRGB holds more chroma there, and the rest comes from
+    // accepting a ratio that still clears the 3:1 that applies to text this
+    // size. It is the brightest orange available on that budget.
     //
     // Each glow keeps its accent's hue less 11.6° at 1.6x the lightness and a
     // quarter of the chroma — the relationship C5E0FF already has to 3169EC.
@@ -58,7 +65,7 @@ enum MoodScale {
         Mood(id: 3, key: "good", label: "Good",
              accent: Color(hex: 0x007D5B), glow: Color(hex: 0xC3E8CF), mascot: "mascot-good"),
         Mood(id: 4, key: "great", label: "Great",
-             accent: Color(hex: 0x975D00), glow: Color(hex: 0xF8D5BC), mascot: "mascot-great"),
+             accent: Color(hex: 0xC55A00), glow: Color(hex: 0xFCD2C4), mascot: "mascot-great"),
     ]
 
     static let last = all.count - 1
