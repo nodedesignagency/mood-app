@@ -186,6 +186,13 @@ enum Figma {
     /// sets 32pt at about 38, so the rest is added as leading.
     static let questionLineSpacing: CGFloat = 4
 
+    /// The mood word's tracking, as a number rather than a `.tracking`.
+    ///
+    /// The word is set a letter at a time so that a letter can be moved on
+    /// its own (see `MoodWord`), and tracking is the space *between* glyphs —
+    /// which, laid out that way, is the spacing of the stack holding them.
+    static let wordTracking: CGFloat = -1.38
+
     // MARK: - Icons
 
     /// From the chip's "Selection colors" swatch.

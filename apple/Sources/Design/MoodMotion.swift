@@ -2,9 +2,9 @@ import SwiftUI
 
 /// The one curve this screen moves on.
 ///
-/// The chip, the glow and the mood word all follow `progress`, and before
-/// they shared a curve they each had their own: the chip sprang, the glow ran
-/// a 0.25-second ease-out, the word snapped.
+/// The chip, the glow and the mood word's colour all follow `progress`, and
+/// before they shared a curve they each had their own: the chip sprang, the
+/// glow ran a 0.25-second ease-out, the word snapped.
 ///
 /// An ease-out is the wrong shape for a value a thumb is driving. It cannot
 /// be retargeted, so every touch event during a drag restarted it from
@@ -21,4 +21,15 @@ enum MoodMotion {
             ? .interactiveSpring(response: 0.20, dampingFraction: 0.86)
             : .spring(response: 0.42, dampingFraction: 0.62)
     }
+
+    /// The mood word's entrance, and the exit of the word it replaces.
+    ///
+    /// The word is the one thing on this screen being *read*, so it does not
+    /// ride `follow` with everything else. It arrives on the slower, looser
+    /// of the two, with a little overshoot to settle on; the word it replaces
+    /// leaves on the quicker one, and leaves without overshooting, so it is
+    /// gone before it can be read as part of its replacement. Both drive one
+    /// number per word — see `MoodWord`.
+    static let wordEnter = Animation.spring(response: 0.40, dampingFraction: 0.74)
+    static let wordExit = Animation.spring(response: 0.30, dampingFraction: 1)
 }

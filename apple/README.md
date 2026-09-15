@@ -22,10 +22,11 @@ which duplicates the sources inside the project folder, and from then on the
 build compiles the copy while git updates the original. Every pulled change
 silently does nothing.
 
-When sources are added or removed, regenerate and commit:
+When sources are added or removed, regenerate and commit — from the repo
+root, which is where the script looks for `apple/Sources`:
 
 ```bash
-cd apple && python3 genproj.py
+python3 apple/genproj.py
 ```
 
 ## Running from the terminal
