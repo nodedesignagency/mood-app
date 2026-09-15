@@ -14,7 +14,11 @@
 		F32A4261B3D7CEABA5272E05 /* MoodApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2EB864DE2DD7E2A1A88CEFA4 /* MoodApp.swift */; };
 		CCD4B43AD0CC47E46190310B /* glow-rays.png in Resources */ = {isa = PBXBuildFile; fileRef = CEF3A4FFA4BAD4EC9D67DD10 /* glow-rays.png */; };
 		C8694572DB47DE10B82A1679 /* hint-swipe.png in Resources */ = {isa = PBXBuildFile; fileRef = DC6562CCC9CD797ACA80A565 /* hint-swipe.png */; };
-		02AD55BD246A9D33A187B98B /* mascot.png in Resources */ = {isa = PBXBuildFile; fileRef = D98C5ABCC6FC16F01789341A /* mascot.png */; };
+		6AC0B6E17E082EC3DEA9A983 /* mascot-awful.png in Resources */ = {isa = PBXBuildFile; fileRef = F056AB1E5C7F09D865859163 /* mascot-awful.png */; };
+		B80DB69B11C360F10BA33455 /* mascot-good.png in Resources */ = {isa = PBXBuildFile; fileRef = E1951823D411D2F55BE7E916 /* mascot-good.png */; };
+		9B7279990A19C423C950D654 /* mascot-great.png in Resources */ = {isa = PBXBuildFile; fileRef = 866F019344F961AC3E45FC70 /* mascot-great.png */; };
+		4064B18D98324BF53242BB33 /* mascot-low.png in Resources */ = {isa = PBXBuildFile; fileRef = 41D89B6EF8BFB67A9827CD08 /* mascot-low.png */; };
+		5E444D02307FC8843D544095 /* mascot-okay.png in Resources */ = {isa = PBXBuildFile; fileRef = F29F57586091058D63B18C67 /* mascot-okay.png */; };
 		8E99782AE7A45E6F34C0BA95 /* mood-awful-blue.png in Resources */ = {isa = PBXBuildFile; fileRef = 17207F32F8BCE7266385F37E /* mood-awful-blue.png */; };
 		F69DFAE3BAE44387556BA0DE /* mood-awful.png in Resources */ = {isa = PBXBuildFile; fileRef = 7A34AC503E5EC3CEEDEA5A50 /* mood-awful.png */; };
 		327A26BD8DF9DB6610AA11A9 /* mood-good-blue.png in Resources */ = {isa = PBXBuildFile; fileRef = 5CE8F505F21C2695571BB670 /* mood-good-blue.png */; };
@@ -45,7 +49,11 @@
 		2EB864DE2DD7E2A1A88CEFA4 /* MoodApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MoodApp.swift; sourceTree = "<group>"; };
 		CEF3A4FFA4BAD4EC9D67DD10 /* glow-rays.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = glow-rays.png; sourceTree = "<group>"; };
 		DC6562CCC9CD797ACA80A565 /* hint-swipe.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = hint-swipe.png; sourceTree = "<group>"; };
-		D98C5ABCC6FC16F01789341A /* mascot.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = mascot.png; sourceTree = "<group>"; };
+		F056AB1E5C7F09D865859163 /* mascot-awful.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = mascot-awful.png; sourceTree = "<group>"; };
+		E1951823D411D2F55BE7E916 /* mascot-good.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = mascot-good.png; sourceTree = "<group>"; };
+		866F019344F961AC3E45FC70 /* mascot-great.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = mascot-great.png; sourceTree = "<group>"; };
+		41D89B6EF8BFB67A9827CD08 /* mascot-low.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = mascot-low.png; sourceTree = "<group>"; };
+		F29F57586091058D63B18C67 /* mascot-okay.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = mascot-okay.png; sourceTree = "<group>"; };
 		17207F32F8BCE7266385F37E /* mood-awful-blue.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = mood-awful-blue.png; sourceTree = "<group>"; };
 		7A34AC503E5EC3CEEDEA5A50 /* mood-awful.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = mood-awful.png; sourceTree = "<group>"; };
 		5CE8F505F21C2695571BB670 /* mood-good-blue.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = mood-good-blue.png; sourceTree = "<group>"; };
@@ -125,7 +133,11 @@
 			children = (
 				CEF3A4FFA4BAD4EC9D67DD10 /* glow-rays.png */,
 				DC6562CCC9CD797ACA80A565 /* hint-swipe.png */,
-				D98C5ABCC6FC16F01789341A /* mascot.png */,
+				F056AB1E5C7F09D865859163 /* mascot-awful.png */,
+				E1951823D411D2F55BE7E916 /* mascot-good.png */,
+				866F019344F961AC3E45FC70 /* mascot-great.png */,
+				41D89B6EF8BFB67A9827CD08 /* mascot-low.png */,
+				F29F57586091058D63B18C67 /* mascot-okay.png */,
 				17207F32F8BCE7266385F37E /* mood-awful-blue.png */,
 				7A34AC503E5EC3CEEDEA5A50 /* mood-awful.png */,
 				5CE8F505F21C2695571BB670 /* mood-good-blue.png */,
@@ -239,7 +251,11 @@
 			files = (
 				CCD4B43AD0CC47E46190310B /* glow-rays.png in Resources */,
 				C8694572DB47DE10B82A1679 /* hint-swipe.png in Resources */,
-				02AD55BD246A9D33A187B98B /* mascot.png in Resources */,
+				6AC0B6E17E082EC3DEA9A983 /* mascot-awful.png in Resources */,
+				B80DB69B11C360F10BA33455 /* mascot-good.png in Resources */,
+				9B7279990A19C423C950D654 /* mascot-great.png in Resources */,
+				4064B18D98324BF53242BB33 /* mascot-low.png in Resources */,
+				5E444D02307FC8843D544095 /* mascot-okay.png in Resources */,
 				8E99782AE7A45E6F34C0BA95 /* mood-awful-blue.png in Resources */,
 				F69DFAE3BAE44387556BA0DE /* mood-awful.png in Resources */,
 				327A26BD8DF9DB6610AA11A9 /* mood-good-blue.png in Resources */,

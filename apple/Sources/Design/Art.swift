@@ -36,14 +36,13 @@ enum Art {
         return found
     }()
 
-    /// One mascot has been drawn so far, so a mood without its own falls back
-    /// to the shared image. When the other four land as `mascot-<key>` they
-    /// are picked up with no change here.
+    /// All five are drawn now — one per mood, named off each mood's `key`, so
+    /// renaming a mood renames what it looks for. The shared stand-in the
+    /// other four used to fall back to is gone with them.
     private static let mascots: [Int: UIImage] = {
-        let shared = UIImage(named: "mascot")
         var found: [Int: UIImage] = [:]
         for mood in MoodScale.all {
-            if let art = UIImage(named: mood.mascot) ?? shared { found[mood.id] = art }
+            if let art = UIImage(named: mood.mascot) { found[mood.id] = art }
         }
         return found
     }()

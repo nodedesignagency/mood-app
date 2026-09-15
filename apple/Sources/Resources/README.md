@@ -46,3 +46,30 @@ drawn heavier than Good and Great), the mouths by 20% (Great's grin is the
 widest), and Okay is on a 132px canvas where the rest are 148px, which quietly
 scales it up 12%. If these are ever redrawn, that is what to fix, in the Figma
 file.
+
+## The mascot
+
+One per mood, `mascot-awful.png` … `mascot-great.png`, named off each mood's
+`key` exactly as the faces are. They came from `image-Photoroom (75)` and
+`(88)`–`(91)` on the `claude/curved-mood-selector-ui-n0zom2` branch, where they
+were uploaded under those names; which is which was settled by hue, and the
+five fall in the scale's own order — red, purple, blue, green, orange — with
+the expressions agreeing (the red one has melted, the orange one is wearing
+sunglasses).
+
+| Mood | File | From |
+| --- | --- | --- |
+| Awful | `mascot-awful.png` | `image-Photoroom (90)` |
+| Low | `mascot-low.png` | `image-Photoroom (91)` |
+| Okay | `mascot-okay.png` | `image-Photoroom (75)` |
+| Good | `mascot-good.png` | `image-Photoroom (88)` |
+| Great | `mascot-great.png` | `image-Photoroom (89)` |
+
+1254px square, transparent, drawn into a 392pt box on the artboard.
+
+**Awful does not stand on the same floor as the rest.** The four standing
+mascots land their feet within 3.1pt of each other, which is careful work. The
+melted one's lowest pixel is 31.3pt above that line, so it floats rather than
+lying on the floor the others stand on. Whether that is wanted is a design
+call, not a bug to be patched here — if it should sit on the floor, the fix is
+to move it down its canvas, the way the faces were.
