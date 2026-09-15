@@ -24,14 +24,25 @@ Square, transparent, black for the resting face and #3169EC for the selected
 one. The current set is 148px (132 for Okay), drawn into a 25.6pt frame, so
 there is plenty of resolution to spare.
 
-**They have to share an eye line.** The app centres each file's *canvas* in the
-chip, so where a face appears is wherever the artist left it on that canvas —
-and the eyes are what the viewer reads as the face's position, not the ink's
-bounding box, which a drooping mouth or a wide grin changes. Awful and Great
-arrived 1.04pt low and 0.52pt high against the other three and read as badly
-spaced in the chip; both files were moved on their canvases to match. If any of
-these are re-exported, check the eye rows land together — the fix belongs in
-the Figma file, where the icons are not on a common baseline.
+**Each face has to be centred on its own canvas.** The app centres a file's
+*canvas* in the chip, so a face appears wherever the artist left it — and in
+the set as exported, none of them were centred. Awful sat 1.56pt low in the
+chip while the other four sat between 0.70 and 1.38pt high, which reads as
+uneven padding, and it is the first thing anyone notices at this size.
 
-Until all ten are here the bar falls back to the faces drawn in
-`Selector/MoodFace.swift`, so the app always runs.
+All ten files have been moved on their canvases so the ink is centred both
+ways; every face now sits within 0.19pt of the centre of its box. Nothing was
+resized, and the resting and blue pairs were moved together so they still match
+pixel for pixel.
+
+Aligning the eyes instead was tried first and is wrong: the eye-to-mouth
+distance differs by 0.86pt between these drawings, so eyes and mouth cannot
+both be aligned by moving a face, and putting the eyes on one line leaves the
+face itself off-centre in the chip by up to 1pt.
+
+What is left cannot be fixed by moving anything. The drawings are not
+consistent with each other: the stroke weight varies by 14% (Awful and Low are
+drawn heavier than Good and Great), the mouths by 20% (Great's grin is the
+widest), and Okay is on a 132px canvas where the rest are 148px, which quietly
+scales it up 12%. If these are ever redrawn, that is what to fix, in the Figma
+file.
