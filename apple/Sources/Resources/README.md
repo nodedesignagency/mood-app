@@ -24,14 +24,5 @@ Square, transparent, black for the resting face and #3169EC for the selected
 one. The current set is 148px (132 for Okay), drawn into a 25.6pt frame, so
 there is plenty of resolution to spare.
 
-## Known problem: mood-awful-blue
-
-Every other blue is pixel-for-pixel its normal, recoloured. `mood-awful-blue`
-is not: its strokes are much heavier and its mouth wider, covering 2424 opaque
-pixels against the normal's 1423 across a visibly larger box. Because the blue
-is faded in *over* the normal, Awful's face thickens as it is selected, where
-the others only change colour. Re-export it from the same artboard as
-`mood-awful.png` and it will match.
-
 Until all ten are here the bar falls back to the faces drawn in
 `Selector/MoodFace.swift`, so the app always runs.
