@@ -35,8 +35,8 @@ struct MoodArcBar: View {
         GeometryReader { proxy in
             let geo = ArcGeometry(width: proxy.size.width)
             let chipCenter = geo.point(at: progress)
-            // The chip lies along the curve, not level: the bar climbs ~12°
-            // at its left end and falls ~8° at its right, and a level capsule
+            // The chip lies along the curve, not level: the bar climbs ~9°
+            // at its left end and falls ~9° at its right, and a level capsule
             // there pokes out of the bar's lower edge.
             let chipAngle = geo.angle(at: progress)
 

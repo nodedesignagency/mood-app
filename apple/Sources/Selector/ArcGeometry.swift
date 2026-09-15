@@ -3,17 +3,18 @@ import SwiftUI
 /// Where the bar and its stops sit, transcribed from the Figma file.
 ///
 /// Node 1:330 ("Frame 2147239328") is 383 × 88.108 at (5, 744) on a 393 × 852
-/// screen. Two different things are measured out of it, and they are *not* the
-/// same curve:
+/// screen.
 ///
 ///   `ArcBarShape`   the bar's own outline, node 1:331 ("Ellipse 4271")
-///   `stops`         the five icon centres, hand-placed by the designer
+///   `stops`         where the five faces and the chip sit
 ///
-/// Every earlier version drew the bar by stroking a curve fitted through the
-/// stops. The stops are not on the bar's centreline — stop 0 sits 6.15pt below
-/// it — so that fit came out the wrong shape *and* 9pt too thick (67.4 against
-/// the real 58.5). The bar now comes from its own path and the stops from
-/// their own measurements, which is the only way both can be right at once.
+/// The stops take their x from the file's icon frames and their y from the
+/// bar's own centreline at that x, read off the outline above. The file's
+/// icons are not on that centreline — the Awful icon sits 6.15pt below it,
+/// Low 3.42pt — and with the chip riding the same points it sank visibly
+/// towards the ends of the bar. Centred on the bar, the tangents come out
+/// symmetric too (±9.2° at the ends, ±6.0° one in, level in the middle),
+/// where the file's icon positions gave −11.6° against +8.2°.
 enum BarLayout {
     static let designWidth: CGFloat = 393
     static let frameWidth: CGFloat = 383
@@ -23,15 +24,15 @@ enum BarLayout {
 
     /// Stop centres, in the bar frame's own coordinates.
     ///
-    /// Unevenly spaced (gaps of 63.6, 74.5, 72.7, 66.0) and not symmetric
-    /// top to bottom (54.89 at the left end against 48.84 at the right).
-    /// That is the designer's hand, not noise, so it is preserved exactly.
+    /// x is the file's: unevenly spaced (gaps of 63.6, 74.5, 72.7, 66.0), the
+    /// designer's hand, preserved exactly. y is the bar's centreline at that
+    /// x — the midpoint between the outline's top and bottom edges there.
     static let stops: [CGPoint] = [
-        CGPoint(x: 52.89, y: 54.89),
-        CGPoint(x: 116.47, y: 41.90),
-        CGPoint(x: 190.96, y: 34.18),
-        CGPoint(x: 263.65, y: 39.36),
-        CGPoint(x: 329.64, y: 48.84),
+        CGPoint(x: 52.89, y: 48.74),
+        CGPoint(x: 116.47, y: 38.48),
+        CGPoint(x: 190.96, y: 34.34),
+        CGPoint(x: 263.65, y: 38.33),
+        CGPoint(x: 329.64, y: 48.95),
     ]
 
     static let last = stops.count - 1
@@ -62,11 +63,7 @@ struct ArcGeometry {
     }
 
     /// Position at a continuous stop index (0…4), on the spline through the
-    /// measured stop centres.
-    ///
-    /// This is deliberately the stop curve and not the bar's centreline: when
-    /// the chip settles it must land exactly where the designer put that icon,
-    /// even where the two curves diverge.
+    /// stop centres — which is to say, along the bar's centreline.
     func point(at index: Double) -> CGPoint {
         map(
             Self.spline(BarLayout.stops.map(\.x), at: index),
@@ -82,7 +79,7 @@ struct ArcGeometry {
     /// where things are, and the angle is whatever that function implies.
     /// Positive is clockwise on screen (y grows downward), which is also what
     /// `rotationEffect` takes, so this needs no conversion. Works out at
-    /// −11.6° on the far left, rising to +8.2° on the far right.
+    /// −9.2° on the far left, level in the middle, +9.2° on the far right.
     func angle(at index: Double) -> Angle {
         let eps = 0.01
         let a = point(at: max(0, index - eps))
