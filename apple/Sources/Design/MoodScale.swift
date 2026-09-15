@@ -16,6 +16,14 @@ struct Mood: Identifiable, Equatable {
     let glow: Color
     /// Asset name for the mascot at this mood. Swapped for video later.
     let mascot: String
+
+    /// The bar's face for this mood, resting and selected.
+    ///
+    /// Derived from `key` rather than stored, so the files and the scale
+    /// cannot drift apart: renaming a mood renames what it looks for. Drop
+    /// the artwork in `Sources/Resources` — see the README there.
+    var icon: String { "mood-\(key)" }
+    var iconSelected: String { "mood-\(key)-blue" }
 }
 
 enum MoodScale {

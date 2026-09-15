@@ -15,6 +15,7 @@
 		111E9DC9621C4D33D8FB97D9 /* LensCanvas.swift in Sources */ = {isa = PBXBuildFile; fileRef = A75B6A573D72898B83D9DBDA /* LensCanvas.swift */; };
 		83B58FFA53C050FD7E117D18 /* MoodArcBar.swift in Sources */ = {isa = PBXBuildFile; fileRef = C8A7B5CA7CD88700EEE646D1 /* MoodArcBar.swift */; };
 		AE584AC8BBC9B09B18655E3B /* MoodFace.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6876E944BF523F492DC06E4D /* MoodFace.swift */; };
+		A1AC0F0FB46984306C25D19A /* MoodIcon.swift in Sources */ = {isa = PBXBuildFile; fileRef = 58C1BDC333317453D07E3DD0 /* MoodIcon.swift */; };
 		E732299940E73421C06FDC99 /* LiquidGlassConfiguration.swift in Sources */ = {isa = PBXBuildFile; fileRef = F84394F359AF4BF3D435D458 /* LiquidGlassConfiguration.swift */; };
 		2300B90811B4E1E7CE740C30 /* LiquidGlassLens.metal in Sources */ = {isa = PBXBuildFile; fileRef = 0FD7139EC04BFAA2B9C1043B /* LiquidGlassLens.metal */; };
 		6B104F3ECD8E1F6A52F04B87 /* LiquidGlassModifier.swift in Sources */ = {isa = PBXBuildFile; fileRef = AF25D2018B10790632966C60 /* LiquidGlassModifier.swift */; };
@@ -29,6 +30,7 @@
 		A75B6A573D72898B83D9DBDA /* LensCanvas.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LensCanvas.swift; sourceTree = "<group>"; };
 		C8A7B5CA7CD88700EEE646D1 /* MoodArcBar.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MoodArcBar.swift; sourceTree = "<group>"; };
 		6876E944BF523F492DC06E4D /* MoodFace.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MoodFace.swift; sourceTree = "<group>"; };
+		58C1BDC333317453D07E3DD0 /* MoodIcon.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MoodIcon.swift; sourceTree = "<group>"; };
 		F84394F359AF4BF3D435D458 /* LiquidGlassConfiguration.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LiquidGlassConfiguration.swift; sourceTree = "<group>"; };
 		0FD7139EC04BFAA2B9C1043B /* LiquidGlassLens.metal */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.metal; path = LiquidGlassLens.metal; sourceTree = "<group>"; };
 		AF25D2018B10790632966C60 /* LiquidGlassModifier.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LiquidGlassModifier.swift; sourceTree = "<group>"; };
@@ -98,6 +100,7 @@
 				A75B6A573D72898B83D9DBDA /* LensCanvas.swift */,
 				C8A7B5CA7CD88700EEE646D1 /* MoodArcBar.swift */,
 				6876E944BF523F492DC06E4D /* MoodFace.swift */,
+				58C1BDC333317453D07E3DD0 /* MoodIcon.swift */,
 			);
 			path = Selector;
 			sourceTree = "<group>";
@@ -196,6 +199,7 @@
 				111E9DC9621C4D33D8FB97D9 /* LensCanvas.swift in Sources */,
 				83B58FFA53C050FD7E117D18 /* MoodArcBar.swift in Sources */,
 				AE584AC8BBC9B09B18655E3B /* MoodFace.swift in Sources */,
+				A1AC0F0FB46984306C25D19A /* MoodIcon.swift in Sources */,
 				E732299940E73421C06FDC99 /* LiquidGlassConfiguration.swift in Sources */,
 				2300B90811B4E1E7CE740C30 /* LiquidGlassLens.metal in Sources */,
 				6B104F3ECD8E1F6A52F04B87 /* LiquidGlassModifier.swift in Sources */,

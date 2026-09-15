@@ -11,16 +11,30 @@ def oid(key):
     """Deterministic 24-hex id, so regenerating produces a stable diff."""
     return hashlib.sha1(key.encode()).hexdigest()[:24].upper()
 
-# Swift sources and Metal shaders both go in the Sources phase; Xcode compiles
-# the shaders into the app's default metallib, which ShaderLibrary.default loads.
+# Two build phases, from one walk of Sources/.
+#
+# Swift and Metal are compiled: Xcode builds the shaders into the app's default
+# metallib, which is where ShaderLibrary.default looks. Images are copied into
+# the bundle instead, which is what makes Image("mood-okay") find them — a file
+# in the Sources phase would be handed to the compiler and fail the build.
+COMPILED = (".swift", ".metal")
+COPIED = (".png",)
+
 files = sorted(
     str(p.relative_to(ROOT / "Sources")).replace("\\", "/")
     for p in (ROOT / "Sources").rglob("*")
-    if p.suffix in (".swift", ".metal")
+    if p.suffix.lower() in COMPILED + COPIED
 )
 
+def is_resource(f):
+    return os.path.splitext(f)[1].lower() in COPIED
+
+def phase_of(f):
+    return "Resources" if is_resource(f) else "Sources"
+
 def filetype(f):
-    return "sourcecode.metal" if f.endswith(".metal") else "sourcecode.swift"
+    ext = os.path.splitext(f)[1].lower()
+    return {".metal": "sourcecode.metal", ".png": "image.png"}.get(ext, "sourcecode.swift")
 if not files:
     sys.exit("no Swift sources found under " + str(ROOT / "Sources"))
 
@@ -57,8 +71,8 @@ out.append(T + "objectVersion = 56;\n" + T + "objects = {\n\n")
 
 body = ""
 for f in files:
-    body += "%s%s%s /* %s in Sources */ = {isa = PBXBuildFile; fileRef = %s /* %s */; };\n" % (
-        T, T, bfile[f], base(f), fref[f], base(f))
+    body += "%s%s%s /* %s in %s */ = {isa = PBXBuildFile; fileRef = %s /* %s */; };\n" % (
+        T, T, bfile[f], base(f), phase_of(f), fref[f], base(f))
 out.append(sec("PBXBuildFile", body))
 
 body = ""
@@ -151,14 +165,20 @@ body += "%s%s%stargets = (\n%s%s%s%s%s /* Mood */,\n%s%s%s);\n" % (T, T, T, T, T
 body += "%s%s};\n" % (T, T)
 out.append(sec("PBXProject", body))
 
-out.append(sec("PBXResourcesBuildPhase",
-               phase(I["resourcesPhase"], "PBXResourcesBuildPhase", "Resources")))
+def entries_for(kind):
+    s = ""
+    for f in files:
+        if phase_of(f) == kind:
+            s += "%s%s%s%s%s /* %s in %s */,\n" % (T, T, T, T, bfile[f], base(f), kind)
+    return s
 
-entries = ""
-for f in files:
-    entries += "%s%s%s%s%s /* %s in Sources */,\n" % (T, T, T, T, bfile[f], base(f))
+out.append(sec("PBXResourcesBuildPhase",
+               phase(I["resourcesPhase"], "PBXResourcesBuildPhase", "Resources",
+                     entries_for("Resources"))))
+
 out.append(sec("PBXSourcesBuildPhase",
-               phase(I["sourcesPhase"], "PBXSourcesBuildPhase", "Sources", entries)))
+               phase(I["sourcesPhase"], "PBXSourcesBuildPhase", "Sources",
+                     entries_for("Sources"))))
 
 SHARED = [
     "ALWAYS_SEARCH_USER_PATHS = NO;",
@@ -259,6 +279,10 @@ scheme = ('<?xml version="1.0" encoding="UTF-8"?>\n'
           '</ArchiveAction>\n</Scheme>\n')
 (PROJ / "xcshareddata" / "xcschemes" / "Mood.xcscheme").write_text(scheme)
 
-print("generated Mood.xcodeproj with %d sources:" % len(files))
-for f in files:
-    print("   ", f)
+compiled = [f for f in files if not is_resource(f)]
+copied = [f for f in files if is_resource(f)]
+print("generated Mood.xcodeproj with %d compiled, %d copied:" % (len(compiled), len(copied)))
+for f in compiled:
+    print("    compile", f)
+for f in copied:
+    print("    copy   ", f)

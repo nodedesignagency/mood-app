@@ -101,10 +101,22 @@ struct MoodArcBar: View {
     }
 
     /// One stop. Always visible: the chip never hides or replaces a face, it
-    /// slides over it.
+    /// slides over it, and the face turns blue as it arrives.
     private func stop(mood: Mood, geo: ArcGeometry) -> some View {
-        MoodFace(progress: Double(mood.id), size: Figma.stopIconSize, color: Figma.iconInk)
+        MoodIcon(mood: mood, size: Figma.stopIconSize, selected: selection(of: mood))
             .position(geo.point(at: Double(mood.id)))
+    }
+
+    /// How much of a stop's blue shows, 0…1.
+    ///
+    /// Full blue when the chip is centred on it, gone by 0.85 of a step away —
+    /// roughly where the chip's edge leaves it, so the colour tracks what the
+    /// glass is actually covering. Smoothstepped rather than linear so the
+    /// handover eases at both ends instead of starting and stopping abruptly.
+    /// Two neighbours are never both fully blue.
+    private func selection(of mood: Mood) -> Double {
+        let t = min(1, abs(progress - Double(mood.id)) / 0.85)
+        return 1 - t * t * (3 - 2 * t)
     }
 
     // MARK: - Gesture
