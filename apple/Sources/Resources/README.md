@@ -82,8 +82,8 @@ anchored at 331 of the 392pt box, which is where that floor falls.
 ## The idle clips
 
 `mascot-<key>.mp4` next to `mascot-<key>.png`, one per mood, and optional: a
-mood without one keeps its still and nothing else changes. Awful, Okay and
-Great have one; Low and Good do not, yet.
+mood without one keeps its still and nothing else changes. Only Good is still
+without one.
 
 They are generated from the still rather than drawn from nothing, which is the
 whole reason they hold the character: the clip's **first frame is the app's own

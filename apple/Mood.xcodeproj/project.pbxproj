@@ -19,6 +19,7 @@
 		B80DB69B11C360F10BA33455 /* mascot-good.png in Resources */ = {isa = PBXBuildFile; fileRef = E1951823D411D2F55BE7E916 /* mascot-good.png */; };
 		CFC16A35DE7FF9B0167BC3B7 /* mascot-great.mp4 in Resources */ = {isa = PBXBuildFile; fileRef = 232DB8FF5E796674D61C59DF /* mascot-great.mp4 */; };
 		9B7279990A19C423C950D654 /* mascot-great.png in Resources */ = {isa = PBXBuildFile; fileRef = 866F019344F961AC3E45FC70 /* mascot-great.png */; };
+		AFAE475DA40131D86AEA02F8 /* mascot-low.mp4 in Resources */ = {isa = PBXBuildFile; fileRef = 375AAD19B1A4C9015227D3FD /* mascot-low.mp4 */; };
 		4064B18D98324BF53242BB33 /* mascot-low.png in Resources */ = {isa = PBXBuildFile; fileRef = 41D89B6EF8BFB67A9827CD08 /* mascot-low.png */; };
 		7418E2429932A20A8F369999 /* mascot-okay.mp4 in Resources */ = {isa = PBXBuildFile; fileRef = 6D8F4444B4A8141C21191161 /* mascot-okay.mp4 */; };
 		5E444D02307FC8843D544095 /* mascot-okay.png in Resources */ = {isa = PBXBuildFile; fileRef = F29F57586091058D63B18C67 /* mascot-okay.png */; };
@@ -59,6 +60,7 @@
 		E1951823D411D2F55BE7E916 /* mascot-good.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = mascot-good.png; sourceTree = "<group>"; };
 		232DB8FF5E796674D61C59DF /* mascot-great.mp4 */ = {isa = PBXFileReference; lastKnownFileType = video.quicktime; path = mascot-great.mp4; sourceTree = "<group>"; };
 		866F019344F961AC3E45FC70 /* mascot-great.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = mascot-great.png; sourceTree = "<group>"; };
+		375AAD19B1A4C9015227D3FD /* mascot-low.mp4 */ = {isa = PBXFileReference; lastKnownFileType = video.quicktime; path = mascot-low.mp4; sourceTree = "<group>"; };
 		41D89B6EF8BFB67A9827CD08 /* mascot-low.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = mascot-low.png; sourceTree = "<group>"; };
 		6D8F4444B4A8141C21191161 /* mascot-okay.mp4 */ = {isa = PBXFileReference; lastKnownFileType = video.quicktime; path = mascot-okay.mp4; sourceTree = "<group>"; };
 		F29F57586091058D63B18C67 /* mascot-okay.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = mascot-okay.png; sourceTree = "<group>"; };
@@ -148,6 +150,7 @@
 				E1951823D411D2F55BE7E916 /* mascot-good.png */,
 				232DB8FF5E796674D61C59DF /* mascot-great.mp4 */,
 				866F019344F961AC3E45FC70 /* mascot-great.png */,
+				375AAD19B1A4C9015227D3FD /* mascot-low.mp4 */,
 				41D89B6EF8BFB67A9827CD08 /* mascot-low.png */,
 				6D8F4444B4A8141C21191161 /* mascot-okay.mp4 */,
 				F29F57586091058D63B18C67 /* mascot-okay.png */,
@@ -271,6 +274,7 @@
 				B80DB69B11C360F10BA33455 /* mascot-good.png in Resources */,
 				CFC16A35DE7FF9B0167BC3B7 /* mascot-great.mp4 in Resources */,
 				9B7279990A19C423C950D654 /* mascot-great.png in Resources */,
+				AFAE475DA40131D86AEA02F8 /* mascot-low.mp4 in Resources */,
 				4064B18D98324BF53242BB33 /* mascot-low.png in Resources */,
 				7418E2429932A20A8F369999 /* mascot-okay.mp4 in Resources */,
 				5E444D02307FC8843D544095 /* mascot-okay.png in Resources */,
