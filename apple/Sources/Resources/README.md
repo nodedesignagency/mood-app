@@ -82,8 +82,8 @@ anchored at 331 of the 392pt box, which is where that floor falls.
 ## The idle clips
 
 `mascot-<key>.mp4` next to `mascot-<key>.png`, one per mood, and optional: a
-mood without one keeps its still and nothing else changes. Only Okay has one so
-far.
+mood without one keeps its still and nothing else changes. Okay and Great have
+one; Awful, Low and Good do not, yet.
 
 They are generated from the still rather than drawn from nothing, which is the
 whole reason they hold the character: the clip's **first frame is the app's own
@@ -103,6 +103,9 @@ Rules for any new one:
 - The glow is baked in, so the clip is only shown while the character is
   standing still. The hop would otherwise stretch that baked glow against the
   live one behind it.
-- Awful, Low, Good and Great sit a little above or below where their still
-  sits, by `MoodMascot`'s posture. Bake that offset into the first frame when
-  generating those four, or their glow will sit a few points off.
+- Awful, Low, Good and Great are lifted or lowered by `MoodMascot`'s posture:
+  +7pt, +3.5, -3.5, -7, with Okay at 0. That offset moves the clip as well as
+  the still, glow and all, so the glow in the first frame is rendered shifted
+  the *other* way — it then lands back on the one the screen draws while the
+  character ends up exactly where the still is. Okay needs none of this, which
+  is why the first clip did not have it.

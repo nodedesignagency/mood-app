@@ -16,6 +16,7 @@
 		C8694572DB47DE10B82A1679 /* hint-swipe.png in Resources */ = {isa = PBXBuildFile; fileRef = DC6562CCC9CD797ACA80A565 /* hint-swipe.png */; };
 		6AC0B6E17E082EC3DEA9A983 /* mascot-awful.png in Resources */ = {isa = PBXBuildFile; fileRef = F056AB1E5C7F09D865859163 /* mascot-awful.png */; };
 		B80DB69B11C360F10BA33455 /* mascot-good.png in Resources */ = {isa = PBXBuildFile; fileRef = E1951823D411D2F55BE7E916 /* mascot-good.png */; };
+		CFC16A35DE7FF9B0167BC3B7 /* mascot-great.mp4 in Resources */ = {isa = PBXBuildFile; fileRef = 232DB8FF5E796674D61C59DF /* mascot-great.mp4 */; };
 		9B7279990A19C423C950D654 /* mascot-great.png in Resources */ = {isa = PBXBuildFile; fileRef = 866F019344F961AC3E45FC70 /* mascot-great.png */; };
 		4064B18D98324BF53242BB33 /* mascot-low.png in Resources */ = {isa = PBXBuildFile; fileRef = 41D89B6EF8BFB67A9827CD08 /* mascot-low.png */; };
 		7418E2429932A20A8F369999 /* mascot-okay.mp4 in Resources */ = {isa = PBXBuildFile; fileRef = 6D8F4444B4A8141C21191161 /* mascot-okay.mp4 */; };
@@ -54,6 +55,7 @@
 		DC6562CCC9CD797ACA80A565 /* hint-swipe.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = hint-swipe.png; sourceTree = "<group>"; };
 		F056AB1E5C7F09D865859163 /* mascot-awful.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = mascot-awful.png; sourceTree = "<group>"; };
 		E1951823D411D2F55BE7E916 /* mascot-good.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = mascot-good.png; sourceTree = "<group>"; };
+		232DB8FF5E796674D61C59DF /* mascot-great.mp4 */ = {isa = PBXFileReference; lastKnownFileType = video.quicktime; path = mascot-great.mp4; sourceTree = "<group>"; };
 		866F019344F961AC3E45FC70 /* mascot-great.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = mascot-great.png; sourceTree = "<group>"; };
 		41D89B6EF8BFB67A9827CD08 /* mascot-low.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = mascot-low.png; sourceTree = "<group>"; };
 		6D8F4444B4A8141C21191161 /* mascot-okay.mp4 */ = {isa = PBXFileReference; lastKnownFileType = video.quicktime; path = mascot-okay.mp4; sourceTree = "<group>"; };
@@ -141,6 +143,7 @@
 				DC6562CCC9CD797ACA80A565 /* hint-swipe.png */,
 				F056AB1E5C7F09D865859163 /* mascot-awful.png */,
 				E1951823D411D2F55BE7E916 /* mascot-good.png */,
+				232DB8FF5E796674D61C59DF /* mascot-great.mp4 */,
 				866F019344F961AC3E45FC70 /* mascot-great.png */,
 				41D89B6EF8BFB67A9827CD08 /* mascot-low.png */,
 				6D8F4444B4A8141C21191161 /* mascot-okay.mp4 */,
@@ -262,6 +265,7 @@
 				C8694572DB47DE10B82A1679 /* hint-swipe.png in Resources */,
 				6AC0B6E17E082EC3DEA9A983 /* mascot-awful.png in Resources */,
 				B80DB69B11C360F10BA33455 /* mascot-good.png in Resources */,
+				CFC16A35DE7FF9B0167BC3B7 /* mascot-great.mp4 in Resources */,
 				9B7279990A19C423C950D654 /* mascot-great.png in Resources */,
 				4064B18D98324BF53242BB33 /* mascot-low.png in Resources */,
 				7418E2429932A20A8F369999 /* mascot-okay.mp4 in Resources */,
