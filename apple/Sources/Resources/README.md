@@ -85,13 +85,13 @@ anchored at 331 of the 392pt box, which is where that floor falls.
 now. They stay optional in the code: a mood whose clip is missing keeps its
 still and nothing else about the screen changes.
 
-| Mood | Loop seam | Feet | Wander | Breath | Motion | Size |
-| --- | --- | --- | --- | --- | --- | --- |
-| Awful | 0.95 | 3.06pt | 0.77pt | 17.6pt | 1.394 | 928KB |
-| Low | 0.82 | 0.00pt | 0.38pt | 6.1pt | 0.459 | 597KB |
-| Okay | 0.80 | 0.00pt | 3.83pt | 13.8pt | 0.333 | 524KB |
-| Good | 0.88 | 0.00pt | 0.77pt | 3.8pt | 0.317 | 565KB |
-| Great | 0.88 | 0.00pt | 4.21pt | 13.0pt | 1.060 | 736KB |
+| Mood | Loop seam | Feet | Wander | Breath | Motion | Cut | Size |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| Awful | 1.39 | 3.06pt | 0.77pt | 17.6pt | 1.394 | 16f | 852KB |
+| Low | 1.31 | 0.00pt | 0.38pt | 6.1pt | 0.459 | 29f | 500KB |
+| Okay | 1.14 | 0.00pt | 3.83pt | 13.8pt | 0.333 | 19f | 460KB |
+| Good | 0.88 | 0.00pt | 0.77pt | 3.8pt | 0.317 | — | 565KB |
+| Great | 0.88 | 0.00pt | 4.21pt | 13.0pt | 1.060 | — | 736KB |
 
 Loop seam is the mean difference between the last frame and the first, out of
 255; feet is how far the lowest ink moves across the clip; wander is the
@@ -107,6 +107,20 @@ rendering of that mood** — page, glow, rays and mascot, at the numbers in
 keyframe, which is what makes the loop seamless. Measured on the Okay clip:
 the last frame differs from the first by 1.01/255 on average, the feet do not
 move at all across the five seconds, and the colour does not drift.
+
+**Cut the dead opening.** A generated clip tends to hold its first frame for
+a beat before it starts moving, and that beat is spent exactly where it is most
+visible: the moment you land on the mood. Low held for 1208ms, Okay for 792 and
+Awful for 667, so all three are trimmed to where they actually wake up.
+
+It costs almost nothing, because what is being cut is static. The new first
+frame is still within 1/255 of the mood's still — closer, in fact, once
+re-encoded — and the loop still closes, since the tail returns to a pose the new
+head is only a hair from. Measure before cutting: find where the rolling
+frame-to-frame motion first passes about 60% of the clip's own average, then
+check the new first frame against the still and the new last-to-first seam.
+Below about 8 frames it is not worth it; Good and Great wake in 6 and are left
+alone.
 
 Rules for any new one:
 
