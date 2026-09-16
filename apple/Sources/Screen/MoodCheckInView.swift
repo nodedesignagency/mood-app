@@ -36,13 +36,18 @@ struct MoodCheckInView: View {
     /// How long the whole arrival takes. Driven flat, so each element's own
     /// slice of it runs at an even rate and the stagger reads as an order
     /// rather than as a rush and a straggler.
-    private static let arrival = 0.9
-    /// When the character is down. Its slice starts at 0.05 and runs for a
-    /// `span`, so it lands well before the bar and the hint have finished
-    /// arriving — and the idle waits for this rather than for the screen,
-    /// or the character would stand still for a third of a second after
-    /// landing, which is the thing that reads as stuck.
-    private static let mascotLands = (0.05 + Entrance.span) * arrival
+    private static let arrival = 1.25
+
+    /// The character's slice of it: it starts falling here and has stopped
+    /// bouncing by `dropFor` later.
+    private static let dropAt = 0.10
+    private static let dropFor = 0.52
+    /// ...and the moment inside that slice when it first hits the floor,
+    /// which is where `easeOutBounce` first touches: 1/2.75 of the way.
+    private static let touchdown = dropAt + dropFor / 2.75
+    /// The idle clip waits for the bouncing to finish, not for the screen:
+    /// the character is moving throughout, so there is nothing to wait out.
+    private static let mascotSettles = (dropAt + dropFor) * arrival
 
     var greetingName = "Jimmy"
 
@@ -73,7 +78,7 @@ struct MoodCheckInView: View {
             withAnimation(.linear(duration: Self.arrival)) { entrance = 1 }
             // The flag flips now and the fade it drives is what waits, so
             // the clip comes up under the character as it settles.
-            withAnimation(.easeOut(duration: 0.3).delay(Self.mascotLands)) {
+            withAnimation(.easeOut(duration: 0.3).delay(Self.mascotSettles)) {
                 arrived = true
             }
         }
@@ -95,29 +100,41 @@ struct MoodCheckInView: View {
             // The light comes up first and the character drops into it; the
             // words follow from the top down; the bar, which is the thing you
             // are being asked to use, comes up from the bottom edge last.
+            // The light comes up first and takes the hit when the character
+            // lands on it.
             glow
-                .entrance(entrance, delay: 0.00, zoom: 0.10)
+                .ignite(entrance, impact: Self.touchdown)
 
             place(x: 0, y: 80, w: 393, h: 16) { greeting }
-                .entrance(entrance, delay: 0.12, rise: 12)
+                .entrance(entrance, delay: 0.30, rise: 12)
             place(x: 60, y: 104, w: 273, h: 84) { question }
-                .entrance(entrance, delay: 0.16, rise: 14)
-            // Negative: the mascot falls into place rather than rising into
-            // it, and carries a little past the floor before settling.
+                .entrance(entrance, delay: 0.34, rise: 14)
+            // The character does not rise into place, it is dropped into it
+            // from 120pt up, lands hard enough to flatten by 16%, bounces
+            // twice and settles. It is squashed against its own feet, which
+            // is where the floor is. It falls before the words arrive, so
+            // there is nothing above it to fall past.
             place(x: 0, y: 184, w: 393, h: 392) { mascot }
-                .entrance(entrance, delay: 0.05, rise: -24, zoom: 0.04)
+                .entrance(entrance,
+                          delay: Self.dropAt, span: Self.dropFor,
+                          drop: 120, anchor: MoodMascot.feet)
+            // Out of a blur and up to size, so the word resolves rather than
+            // slides.
             place(x: 0, y: 528, w: 393, h: 57) { moodLabel }
-                .entrance(entrance, delay: 0.24, rise: 14)
+                .entrance(entrance, delay: 0.40, rise: 10, zoom: 0.22, softness: 10)
             place(x: 132, y: 588, w: 128.45, h: 49.45) { continueButton }
-                .entrance(entrance, delay: 0.30, rise: 14)
+                .entrance(entrance, delay: 0.58, rise: 14, zoom: 0.10)
             place(x: 0, y: 699, w: 393, h: 30) { hint }
-                .entrance(entrance, delay: 0.36, rise: 12)
+                .entrance(entrance, delay: 0.64, rise: 12)
+            // The bar rises from the bottom edge as one piece; its five faces
+            // pop in along it afterwards, which the bar handles itself.
             place(x: 0, y: 744, w: 393, h: BarLayout.frameHeight) {
                 // The bar carries its own 5pt side inset, measured from its
                 // frame, so it takes the full artboard width.
-                MoodArcBar(progress: $progress, isDragging: $isDragging)
+                MoodArcBar(progress: $progress, isDragging: $isDragging,
+                           entrance: entrance)
             }
-            .entrance(entrance, delay: 0.32, rise: 46)
+            .entrance(entrance, delay: 0.46, span: 0.32, rise: 56)
         }
     }
 

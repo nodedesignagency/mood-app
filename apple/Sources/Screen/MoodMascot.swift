@@ -63,7 +63,9 @@ struct MoodMascot: View, Animatable {
     /// 3.1pt of each other, at 331pt down the box. Stretch and squash are
     /// anchored there rather than at the box's edge, so the character grows
     /// and compresses against the floor it is standing on.
-    private static let feet = UnitPoint(x: 0.5, y: 331.0 / 392.0)
+    /// Not private: the screen's arrival squashes the character against this
+    /// same floor when it lands.
+    static let feet = UnitPoint(x: 0.5, y: 331.0 / 392.0)
 
     var body: some View {
         // 0 sitting on a mood, 1 exactly half way to the next — which is also

@@ -26,6 +26,14 @@ struct MoodArcBar: View {
     /// mood word can move on the same curve as the chip.
     @Binding var isDragging: Bool
 
+    /// The screen's arrival, 0 → 1. The bar rises as one piece and its five
+    /// faces then pop in along it, left to right — see `Entrance`.
+    var entrance: Double = 1
+
+    /// Where the first face lands in the arrival, and the gap to the next.
+    private static let stopsAt = 0.56
+    private static let stopGap = 0.025
+
     /// Nearest stop, recomputed continuously — drives the haptic and the label.
     private var nearest: Int {
         min(BarLayout.last, max(0, Int(progress.rounded())))
@@ -98,6 +106,12 @@ struct MoodArcBar: View {
     /// slides over it, and the face turns blue as it arrives.
     private func stop(mood: Mood, geo: ArcGeometry) -> some View {
         MoodIcon(mood: mood, size: Figma.stopIconSize, selected: selection(of: mood))
+            // Popped in on arrival, one after the next along the bar. Inside
+            // the lens's layer, so they are refracted as they land.
+            .entrance(entrance,
+                      delay: Self.stopsAt + Self.stopGap * Double(mood.id),
+                      span: 0.26,
+                      zoom: 0.65)
             // Lying along the bar, exactly as the chip does.
             //
             // The bar climbs and falls, so the chip turns to its tangent —
