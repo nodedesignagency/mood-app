@@ -26,9 +26,9 @@ struct MoodMascot: View, Animatable {
     /// True while a thumb is on the bar. The idle clip runs the moment it
     /// lifts, and fades in as the character lands.
     var isDragging: Bool
-    /// False until the screen has finished arriving. The clip waits for it
-    /// for the same reason it waits out a hop: it carries a baked glow, and
-    /// the arrival drops the character 24pt through a glow that is still
+    /// False until the character has come to rest. The clip waits for it for
+    /// the same reason it waits out a hop: it carries a baked glow, and the
+    /// arrival falls the character 120pt through a glow that is still
     /// blooming in behind it.
     var arrived: Bool
 

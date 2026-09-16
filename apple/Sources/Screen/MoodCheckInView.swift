@@ -36,18 +36,26 @@ struct MoodCheckInView: View {
     /// How long the whole arrival takes. Driven flat, so each element's own
     /// slice of it runs at an even rate and the stagger reads as an order
     /// rather than as a rush and a straggler.
-    private static let arrival = 1.25
+    ///
+    /// It was 1.25s and the last element did not land until 1.18 of that. Over
+    /// a second is long enough that you watch the screen being built instead
+    /// of watching it arrive — which is most of what "it assembles" meant. The
+    /// slices below overlap much more heavily now, so the same order reads as
+    /// one movement and is finished in 874ms.
+    private static let arrival = 0.95
 
-    /// The character's slice of it: it starts falling here and has stopped
-    /// bouncing by `dropFor` later.
-    private static let dropAt = 0.10
-    private static let dropFor = 0.52
-    /// ...and the moment inside that slice when it first hits the floor,
-    /// which is where `easeOutBounce` first touches: 1/2.75 of the way.
-    private static let touchdown = dropAt + dropFor / 2.75
-    /// The idle clip waits for the bouncing to finish, not for the screen:
-    /// the character is moving throughout, so there is nothing to wait out.
-    private static let mascotSettles = (dropAt + dropFor) * arrival
+    /// The character's slice of it: it starts falling here and is at rest
+    /// `fallFor` later.
+    private static let fallAt = 0.06
+    private static let fallFor = 0.46
+    /// ...and the moment inside that slice when the landing is deepest, which
+    /// is the middle of `Entrance`'s cushion. The glow gives at the same
+    /// moment, so keep this in step with `cushionAt` + `cushionFor` / 2.
+    private static let touchdown = fallAt + 0.72 * fallFor
+    /// The idle clip waits for the character to come to rest. It carries a
+    /// baked glow, and the arrival moves the character against a glow that is
+    /// still blooming in behind it.
+    private static let mascotSettles = (fallAt + fallFor) * arrival
 
     var greetingName = "Jimmy"
 
@@ -97,45 +105,46 @@ struct MoodCheckInView: View {
             Figma.background
 
             // The order things arrive in, and what each one does on the way.
-            // The light comes up first and the character drops into it; the
+            // The light comes up first and the character falls into it; the
             // words follow from the top down; the bar, which is the thing you
             // are being asked to use, comes up from the bottom edge last.
-            // The light comes up first and takes the hit when the character
-            // lands on it.
+            // The light takes the weight when the character lands on it.
+            //
+            // The slices overlap: the greeting starts while the character
+            // still has 20pt to fall, the question while it has 11. That
+            // overlap is deliberate and it is most of the difference between
+            // a screen that arrives and a screen that is assembled in front
+            // of you, one piece at a time.
             glow
-                .ignite(entrance, impact: Self.touchdown)
 
             place(x: 0, y: 80, w: 393, h: 16) { greeting }
-                .entrance(entrance, delay: 0.30, rise: 12)
+                .entrance(entrance, delay: 0.22, rise: 12)
             place(x: 60, y: 104, w: 273, h: 84) { question }
-                .entrance(entrance, delay: 0.34, rise: 14)
-            // The character does not rise into place, it is dropped into it
-            // from 120pt up, lands hard enough to flatten by 16%, bounces
-            // twice and settles. It is squashed against its own feet, which
-            // is where the floor is. It falls before the words arrive, so
-            // there is nothing above it to fall past.
+                .entrance(entrance, delay: 0.26, rise: 14)
+            // The character does not rise into place, it falls into it from
+            // 120pt above, gives 6% against its own feet as it lands, and
+            // stays down. It does not bounce: see `Entrance` for what the
+            // bounce actually looked like frame by frame.
             place(x: 0, y: 184, w: 393, h: 392) { mascot }
                 .entrance(entrance,
-                          delay: Self.dropAt, span: Self.dropFor,
-                          drop: 120, anchor: MoodMascot.feet)
+                          delay: Self.fallAt, span: Self.fallFor,
+                          fall: 120, anchor: MoodMascot.feet)
             // Up to size rather than sliding. It used to resolve out of a
             // 10pt blur as well, which was another offscreen pass during the
             // busiest second of the app's life for a touch nobody asked for.
             place(x: 0, y: 528, w: 393, h: 57) { moodLabel }
-                .entrance(entrance, delay: 0.40, rise: 10, zoom: 0.22)
+                .entrance(entrance, delay: 0.38, rise: 10, zoom: 0.22)
             place(x: 132, y: 588, w: 128.45, h: 49.45) { continueButton }
-                .entrance(entrance, delay: 0.58, rise: 14, zoom: 0.10)
+                .entrance(entrance, delay: 0.54, rise: 14, zoom: 0.10)
             place(x: 0, y: 699, w: 393, h: 30) { hint }
-                .entrance(entrance, delay: 0.64, rise: 12)
-            // The bar rises from the bottom edge as one piece; its five faces
-            // pop in along it afterwards, which the bar handles itself.
+                .entrance(entrance, delay: 0.62, rise: 12)
+            // The bar rises from the bottom edge as one piece, faces and all.
             place(x: 0, y: 744, w: 393, h: BarLayout.frameHeight) {
                 // The bar carries its own 5pt side inset, measured from its
                 // frame, so it takes the full artboard width.
-                MoodArcBar(progress: $progress, isDragging: $isDragging,
-                           entrance: entrance)
+                MoodArcBar(progress: $progress, isDragging: $isDragging)
             }
-            .entrance(entrance, delay: 0.46, span: 0.32, rise: 56)
+            .entrance(entrance, delay: 0.44, span: 0.32, rise: 56)
         }
     }
 
@@ -157,6 +166,17 @@ struct MoodCheckInView: View {
     /// The file gives one fixed #C5E0FF, which is Okay's. Every mood has its
     /// own, blended continuously, so the whole page carries the mood and not
     /// just the word.
+    ///
+    /// The light and the rays arrive separately, and only the light moves.
+    ///
+    /// `.softLight` is a blend mode, and a blend mode is composited offscreen.
+    /// While the two were one stack, igniting it scaled and turned that
+    /// composite on every frame of the arrival — the same per-frame offscreen
+    /// pass that the glow's Gaussian used to cost before it became a gradient.
+    /// The gradient is what grows now; the rays only fade up, in place. The
+    /// sweep they used to make is gone with it, and it is not much to lose:
+    /// 9° of a white-on-white texture at soft light, during the one second the
+    /// screen has no frames to spare.
     private var glow: some View {
         ZStack {
             // The blur, precomputed — see `Figma.glowStops`. Drawn as a blur
@@ -169,6 +189,7 @@ struct MoodCheckInView: View {
                            endRadius: Figma.glowRadius)
                 .frame(width: Figma.glowRadius * 2, height: Figma.glowRadius * 2)
                 .position(Figma.glowCentre)
+                .ignite(entrance, impact: Self.touchdown)
 
             if let rays = Art.rays {
                 Image(uiImage: rays)
@@ -176,6 +197,11 @@ struct MoodCheckInView: View {
                     .frame(width: Figma.raysSize.width, height: Figma.raysSize.height)
                     .blendMode(.softLight)
                     .position(Figma.raysCentre)
+                    // Opacity and nothing else. Driven through `Entrance` so
+                    // it takes its own slice of the arrival rather than one
+                    // flat fade across all of it — a plain `.opacity` here
+                    // would read `entrance` once, at 1.
+                    .entrance(entrance, delay: 0.04, span: 0.36)
             }
         }
         .animation(MoodMotion.follow(isDragging), value: progress)
