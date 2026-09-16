@@ -81,9 +81,24 @@ anchored at 331 of the 392pt box, which is where that floor falls.
 
 ## The idle clips
 
-`mascot-<key>.mp4` next to `mascot-<key>.png`, one per mood, and optional: a
-mood without one keeps its still and nothing else changes. Only Good is still
-without one.
+`mascot-<key>.mp4` next to `mascot-<key>.png`, one per mood. All five have one
+now. They stay optional in the code: a mood whose clip is missing keeps its
+still and nothing else about the screen changes.
+
+| Mood | Loop seam | Feet | Wander | Breath | Motion | Size |
+| --- | --- | --- | --- | --- | --- | --- |
+| Awful | 0.95 | 3.06pt | 0.77pt | 17.6pt | 1.394 | 928KB |
+| Low | 0.82 | 0.00pt | 0.38pt | 6.1pt | 0.459 | 597KB |
+| Okay | 0.80 | 0.00pt | 3.83pt | 13.8pt | 0.333 | 524KB |
+| Good | 0.88 | 0.00pt | 0.77pt | 3.8pt | 0.317 | 565KB |
+| Great | 0.88 | 0.00pt | 4.21pt | 13.0pt | 1.060 | 736KB |
+
+Loop seam is the mean difference between the last frame and the first, out of
+255; feet is how far the lowest ink moves across the clip; wander is the
+horizontal travel of the character's centre; breath is the rise at the top;
+motion is the mean frame-to-frame change. Every one of the five starts on a
+frame that matches its still to 100% of the character's width with the feet
+where they were.
 
 They are generated from the still rather than drawn from nothing, which is the
 whole reason they hold the character: the clip's **first frame is the app's own
