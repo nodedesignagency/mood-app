@@ -24,8 +24,6 @@ struct Entrance: ViewModifier, Animatable {
     var rise: CGFloat
     /// How much smaller it starts, for things that pop rather than travel.
     var zoom: CGFloat
-    /// How far out of focus it starts.
-    var softness: CGFloat
     /// If set, the element *falls* this far instead, and bounces on landing.
     var drop: CGFloat
     /// What a landing squashes against. The mascot's is its feet.
@@ -82,7 +80,6 @@ struct Entrance: ViewModifier, Animatable {
         let squash = falling ? Self.squash(t) : 0
 
         return content
-            .blur(radius: calm ? 0 : softness * away)
             // A landing spreads what it lands on: wider as it is flattened.
             .scaleEffect(
                 x: calm ? 1 : 1 - zoom * away + squash * 0.85,
@@ -169,12 +166,11 @@ extension View {
         span: Double = 0.30,
         rise: CGFloat = 0,
         zoom: CGFloat = 0,
-        softness: CGFloat = 0,
         drop: CGFloat = 0,
         anchor: UnitPoint = .center
     ) -> some View {
         modifier(Entrance(phase: phase, delay: delay, span: span, rise: rise,
-                          zoom: zoom, softness: softness, drop: drop, anchor: anchor))
+                          zoom: zoom, drop: drop, anchor: anchor))
     }
 
     /// Come up like a light being switched on. See `Ignite`.

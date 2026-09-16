@@ -149,8 +149,47 @@ enum Figma {
     static let glowDiameter: CGFloat = 440.815
     /// Figma's Layer blur is about twice the Gaussian sigma — the same halving
     /// the chip's shadow needs. The exported SVG agrees: 164.48 comes across
-    /// as `stdDeviation="82.2416"`.
+    /// as `stdDeviation="82.2416"`. Kept as the record of what the file says;
+    /// the screen draws `glowStops` instead, for the reason below.
     static let glowBlur: CGFloat = 164.48 / 2
+
+    // MARK: - ...drawn as a gradient rather than as a blur
+    //
+    // A 440.815 circle under an 82pt Gaussian is the most expensive thing on
+    // this screen. Core Animation caches the result while nothing moves, which
+    // is why a still screen held 60fps — but every frame where the glow's
+    // colour or its size changes has to blur a full-screen layer again, and
+    // that is every frame of a drag and every frame of the screen arriving.
+    // Measured on a recording of the arrival: 32-44fps while it ran, 60 once
+    // it had.
+    //
+    // These stops are that blur rather than an impression of it: a disc of
+    // radius 220.41 convolved with a Gaussian of sigma 82.24, sampled along
+    // its own radius. The gradient sits within 0.8 of 255 of the real profile
+    // on average and 2.8 at its worst, and the GPU draws it with no offscreen
+    // pass at all.
+
+    /// Where the blurred disc has faded to nothing: R + 3σ.
+    static let glowRadius: CGFloat = 467.1
+
+    /// The profile of that blur, as gradient stops.
+    static func glowStops(_ fill: Color) -> [Gradient.Stop] {
+        [
+            .init(color: fill.opacity(0.9726), location: 0.00),
+            .init(color: fill.opacity(0.9475), location: 0.12),
+            .init(color: fill.opacity(0.8526), location: 0.24),
+            .init(color: fill.opacity(0.6994), location: 0.34),
+            .init(color: fill.opacity(0.5364), location: 0.42),
+            .init(color: fill.opacity(0.4068), location: 0.48),
+            .init(color: fill.opacity(0.2860), location: 0.54),
+            .init(color: fill.opacity(0.1850), location: 0.60),
+            .init(color: fill.opacity(0.1096), location: 0.66),
+            .init(color: fill.opacity(0.0528), location: 0.73),
+            .init(color: fill.opacity(0.0170), location: 0.82),
+            .init(color: fill.opacity(0.0043), location: 0.91),
+            .init(color: fill.opacity(0.0000), location: 1.00),
+        ]
+    }
     /// Centre of Ellipse 2357 on the artboard, from the frame at (−86, 108)
     /// plus the ellipse's own (68.26, 94.58) and its 220.41 radius.
     static let glowCentre = CGPoint(x: 202.67, y: 422.98)

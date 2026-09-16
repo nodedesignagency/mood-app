@@ -118,10 +118,11 @@ struct MoodCheckInView: View {
                 .entrance(entrance,
                           delay: Self.dropAt, span: Self.dropFor,
                           drop: 120, anchor: MoodMascot.feet)
-            // Out of a blur and up to size, so the word resolves rather than
-            // slides.
+            // Up to size rather than sliding. It used to resolve out of a
+            // 10pt blur as well, which was another offscreen pass during the
+            // busiest second of the app's life for a touch nobody asked for.
             place(x: 0, y: 528, w: 393, h: 57) { moodLabel }
-                .entrance(entrance, delay: 0.40, rise: 10, zoom: 0.22, softness: 10)
+                .entrance(entrance, delay: 0.40, rise: 10, zoom: 0.22)
             place(x: 132, y: 588, w: 128.45, h: 49.45) { continueButton }
                 .entrance(entrance, delay: 0.58, rise: 14, zoom: 0.10)
             place(x: 0, y: 699, w: 393, h: 30) { hint }
@@ -158,10 +159,15 @@ struct MoodCheckInView: View {
     /// just the word.
     private var glow: some View {
         ZStack {
-            Circle()
-                .fill(MoodScale.glow(at: progress))
-                .frame(width: Figma.glowDiameter, height: Figma.glowDiameter)
-                .blur(radius: Figma.glowBlur)
+            // The blur, precomputed — see `Figma.glowStops`. Drawn as a blur
+            // this was costing a full-screen Gaussian on every frame the
+            // colour or the size changed, which is every frame of a drag and
+            // of the arrival.
+            RadialGradient(stops: Figma.glowStops(MoodScale.glow(at: progress)),
+                           center: .center,
+                           startRadius: 0,
+                           endRadius: Figma.glowRadius)
+                .frame(width: Figma.glowRadius * 2, height: Figma.glowRadius * 2)
                 .position(Figma.glowCentre)
 
             if let rays = Art.rays {

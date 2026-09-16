@@ -73,7 +73,13 @@ struct MoodWord: View, Animatable {
     var body: some View {
         ZStack {
             ForEach(MoodScale.all) { mood in
-                word(mood)
+                // A word only reaches the window within about 0.9 of a mood.
+                // The other three are not drawn at all: left in, each carried
+                // a blur of its own that the compositor has to honour even at
+                // radius zero, and this body is rebuilt every frame.
+                if abs(Double(mood.id) - progress) < 1.05 {
+                    word(mood)
+                }
             }
         }
         .frame(height: Self.window)
@@ -91,10 +97,6 @@ struct MoodWord: View, Animatable {
         // word holds its own colour and sharpness while the thumb is near it
         // and gives them up as the thumb leaves.
         let away = ease(min(1, abs(d) / 0.5))
-        // A word only reaches the window within about 0.9 of a mood, so the
-        // three that cannot be seen are not drawn or blurred. Five blurred
-        // words a frame, at 120Hz, for three of them to be masked out.
-        let near = abs(d) < 1.05
 
         return Text(mood.label)
             .tracking(Figma.wordTracking)
@@ -102,8 +104,8 @@ struct MoodWord: View, Animatable {
             // so the colour at rest is exactly the file's and the one rolling
             // past is honestly the next mood's.
             .foregroundStyle(mood.accent)
-            .blur(radius: calm || !near ? 0 : Self.maxBlur * CGFloat(away))
-            .opacity(!near ? 0 : (calm ? max(0, 1 - abs(d)) : 1 - Self.maxFade * away))
+            .blur(radius: calm ? 0 : Self.maxBlur * CGFloat(away))
+            .opacity(calm ? max(0, 1 - abs(d)) : 1 - Self.maxFade * away)
             .scaleEffect(1 - Self.maxShrink * CGFloat(away))
             .rotation3DEffect(.radians(turn), axis: (x: 1, y: 0, z: 0), perspective: 0.4)
             .offset(y: calm ? 0 : CGFloat(sin(turn)) * Self.radius)
