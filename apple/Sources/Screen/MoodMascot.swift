@@ -26,6 +26,11 @@ struct MoodMascot: View, Animatable {
     /// True while a thumb is on the bar. The idle clip runs the moment it
     /// lifts, and fades in as the character lands.
     var isDragging: Bool
+    /// False until the screen has finished arriving. The clip waits for it
+    /// for the same reason it waits out a hop: it carries a baked glow, and
+    /// the arrival drops the character 24pt through a glow that is still
+    /// blooming in behind it.
+    var arrived: Bool
 
     var animatableData: Double {
         get { progress }
@@ -150,7 +155,7 @@ struct MoodMascot: View, Animatable {
     /// holds for a mood with no clip at all. So none of this is ever waiting
     /// on a player to start — it is only deciding when to show one.
     private var clipOpacity: Double {
-        guard !isDragging else { return 0 }
+        guard arrived, !isDragging else { return 0 }
         let flight = min(1, abs(progress - progress.rounded()) * 2)
         return max(0, 1 - flight / Self.clipFadeIn)
     }

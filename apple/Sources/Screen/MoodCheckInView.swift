@@ -25,6 +25,24 @@ struct MoodCheckInView: View {
     /// True while a thumb is on the bar. Held here rather than in the bar so
     /// the glow and the mood word can move on the same curve as the chip.
     @State private var isDragging = false
+    /// The screen arriving, 0 → 1, once per launch. Every element takes a
+    /// slice of it — see `Entrance`.
+    @State private var entrance: Double = 0
+    /// ...and whether that has finished. The mascot's idle clip waits for it:
+    /// the clip carries a baked glow, and the arrival moves the character
+    /// against a glow that is blooming in behind it.
+    @State private var arrived = false
+
+    /// How long the whole arrival takes. Driven flat, so each element's own
+    /// slice of it runs at an even rate and the stagger reads as an order
+    /// rather than as a rush and a straggler.
+    private static let arrival = 0.9
+    /// When the character is down. Its slice starts at 0.05 and runs for a
+    /// `span`, so it lands well before the bar and the hint have finished
+    /// arriving — and the idle waits for this rather than for the screen,
+    /// or the character would stand still for a third of a second after
+    /// landing, which is the thing that reads as stuck.
+    private static let mascotLands = (0.05 + Entrance.span) * arrival
 
     var greetingName = "Jimmy"
 
@@ -50,6 +68,15 @@ struct MoodCheckInView: View {
             }
         }
         .ignoresSafeArea()
+        .onAppear {
+            guard entrance == 0 else { return }
+            withAnimation(.linear(duration: Self.arrival)) { entrance = 1 }
+            // The flag flips now and the fade it drives is what waits, so
+            // the clip comes up under the character as it settles.
+            withAnimation(.easeOut(duration: 0.3).delay(Self.mascotLands)) {
+                arrived = true
+            }
+        }
     }
 
     // MARK: - Layout
@@ -63,19 +90,34 @@ struct MoodCheckInView: View {
             // Inside the artboard too, so the glow's soft light has something
             // to blend against rather than transparency.
             Figma.background
+
+            // The order things arrive in, and what each one does on the way.
+            // The light comes up first and the character drops into it; the
+            // words follow from the top down; the bar, which is the thing you
+            // are being asked to use, comes up from the bottom edge last.
             glow
+                .entrance(entrance, delay: 0.00, zoom: 0.10)
 
             place(x: 0, y: 80, w: 393, h: 16) { greeting }
+                .entrance(entrance, delay: 0.12, rise: 12)
             place(x: 60, y: 104, w: 273, h: 84) { question }
+                .entrance(entrance, delay: 0.16, rise: 14)
+            // Negative: the mascot falls into place rather than rising into
+            // it, and carries a little past the floor before settling.
             place(x: 0, y: 184, w: 393, h: 392) { mascot }
+                .entrance(entrance, delay: 0.05, rise: -24, zoom: 0.04)
             place(x: 0, y: 528, w: 393, h: 57) { moodLabel }
+                .entrance(entrance, delay: 0.24, rise: 14)
             place(x: 132, y: 588, w: 128.45, h: 49.45) { continueButton }
+                .entrance(entrance, delay: 0.30, rise: 14)
             place(x: 0, y: 699, w: 393, h: 30) { hint }
+                .entrance(entrance, delay: 0.36, rise: 12)
             place(x: 0, y: 744, w: 393, h: BarLayout.frameHeight) {
                 // The bar carries its own 5pt side inset, measured from its
                 // frame, so it takes the full artboard width.
                 MoodArcBar(progress: $progress, isDragging: $isDragging)
             }
+            .entrance(entrance, delay: 0.32, rise: 46)
         }
     }
 
@@ -143,7 +185,7 @@ struct MoodCheckInView: View {
     /// The mascot. How one mood's drawing becomes the next is `MoodMascot`'s
     /// business; the screen supplies the position and the curve.
     private var mascot: some View {
-        MoodMascot(progress: progress, isDragging: isDragging)
+        MoodMascot(progress: progress, isDragging: isDragging, arrived: arrived)
             .animation(MoodMotion.follow(isDragging), value: progress)
     }
 
