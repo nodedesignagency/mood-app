@@ -23,8 +23,8 @@ import SwiftUI
 struct MoodMascot: View, Animatable {
     /// Continuous position along the scale, 0…4.
     var progress: Double
-    /// True while a thumb is on the bar. The idle clip only runs when the
-    /// character is standing on a mood rather than travelling between two.
+    /// True while a thumb is on the bar. The idle clip runs the moment it
+    /// lifts, and fades in as the character lands.
     var isDragging: Bool
 
     var animatableData: Double {
@@ -46,6 +46,8 @@ struct MoodMascot: View, Animatable {
     private static let apexBlur: CGFloat = 2.5
     /// How much lower the character sits at Awful than at Great.
     private static let posture: CGFloat = 7
+    /// The last fraction of a hop, across which the idle clip fades in.
+    private static let clipFadeIn = 0.25
 
     /// Where the feet are, as a fraction of the mascot's 392pt box.
     ///
@@ -96,38 +98,50 @@ struct MoodMascot: View, Animatable {
                 MoodFace(progress: progress, size: 190, color: MoodScale.accent(at: progress))
             }
 
-            if let clip = Art.idle(mood) {
-                LoopingVideo(url: clip, isPlaying: settled)
-                    // The clip carries the glow baked into it, because it was
-                    // generated from a frame that had it. That glow came from
-                    // the same numbers the screen draws its own with, so the
-                    // two match — but only to the accuracy of an H.264 frame,
-                    // and a rectangle is unforgiving. The edges are faded out
-                    // so there is no rectangle to notice; the character's own
-                    // ink starts 51pt in, well clear of it.
-                    .mask { edgeFade }
-                    // ...and that baked glow is also why the clip is hidden
-                    // the moment the character is not standing still. The hop
-                    // scales and lifts everything inside this stack, and the
-                    // still can take that because it is transparent around the
-                    // character — the screen's own glow shows through it. The
-                    // clip cannot: its glow would be lifted and stretched with
-                    // it, and slide against the one behind.
-                    .opacity(settled ? 1 : 0)
-                    .allowsHitTesting(false)
-            }
+            // Always here, even for the four moods that have no clip yet:
+            // taking it out of the tree and putting it back is what made the
+            // character slow to come alive. See `LoopingVideo`.
+            LoopingVideo(url: Art.idle(mood), isPlaying: !isDragging)
+                // The clip carries the glow baked into it, because it was
+                // generated from a frame that had it. That glow came from the
+                // same numbers the screen draws its own with, so the two
+                // match — but only to the accuracy of an H.264 frame, and a
+                // rectangle is unforgiving. The edges are faded out so there
+                // is no rectangle to notice; the character's own ink starts
+                // 51pt in, well clear of it.
+                .mask { edgeFade }
+                .opacity(clipOpacity)
+                .allowsHitTesting(false)
         }
     }
 
-    /// Standing still on a mood, with no thumb on the bar: the only state in
-    /// which the idle clip is shown.
+    /// How much of the idle clip is showing: none while a thumb is down, and
+    /// fading in over the last quarter of the character's landing.
     ///
-    /// The release spring is still running for a moment after a thumb lifts,
-    /// and `progress` is not quite on a mood yet, so this waits for it. It
-    /// costs nothing to wait: frame 0 of the clip is the still, so whichever
-    /// of the two is on screen, the pixels are the same.
-    private var settled: Bool {
-        !isDragging && abs(progress - progress.rounded()) < 0.01
+    /// This used to wait for the release spring to have properly finished —
+    /// `progress` within 0.01 of a mood — and that is a long time to wait. The
+    /// spring's envelope decays at 9.27 a second, so a thumb lifted half a
+    /// mood out left the character standing there for 422ms before it so much
+    /// as breathed, which reads as the animation being slow to start rather
+    /// than as anything landing.
+    ///
+    /// It does not have to be a switch. The reason for waiting at all is that
+    /// the clip carries a baked glow and the hop lifts and stretches
+    /// everything in that stack — the still can take that, because it is
+    /// transparent around the character and the screen's own glow shows
+    /// through it, but the clip's glow would slide against the one behind.
+    /// That only matters while the hop is big. By the time the character is
+    /// within a quarter of its last hop the lift is under 2.5pt and the
+    /// stretch is a fifth of a percent, so the clip fades in across exactly
+    /// that, arriving as the character lands rather than after it.
+    ///
+    /// The clip is already playing by then: that is `isPlaying`, which goes
+    /// true the moment the thumb lifts, so none of this is waiting on a
+    /// player to start.
+    private var clipOpacity: Double {
+        guard !isDragging else { return 0 }
+        let flight = min(1, abs(progress - progress.rounded()) * 2)
+        return max(0, 1 - flight / Self.clipFadeIn)
     }
 
     /// Opaque through the middle, fading out over the last 30pt or so.
