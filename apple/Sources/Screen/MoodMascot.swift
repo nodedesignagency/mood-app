@@ -23,6 +23,9 @@ import SwiftUI
 struct MoodMascot: View, Animatable {
     /// Continuous position along the scale, 0…4.
     var progress: Double
+    /// True while a thumb is on the bar. The idle clip only runs when the
+    /// character is standing on a mood rather than travelling between two.
+    var isDragging: Bool
 
     var animatableData: Double {
         get { progress }
@@ -73,18 +76,66 @@ struct MoodMascot: View, Animatable {
             .offset(y: posture - Self.hop * CGFloat(sin(Double.pi / 2 * flight)))
     }
 
-    /// The drawing for whichever mood is nearest. No transition and no
-    /// `id` — the swap is a cut, and the hop is what hides it.
+    /// The drawing for whichever mood is nearest, and its idle clip over the
+    /// top where one exists. No transition and no `id` on the drawing — the
+    /// swap is a cut, and the hop is what hides it.
+    ///
+    /// The clip is not a replacement for the still, it is laid over it: its
+    /// first frame is that still, so the two agree exactly at the moment it
+    /// starts and at every loop. A mood with no clip keeps the still and
+    /// nothing else changes.
     @ViewBuilder
     private var art: some View {
         let mood = MoodScale.nearest(to: progress)
-        if let drawn = Art.mascot(mood) {
-            Image(uiImage: drawn)
-                .resizable()
-                .scaledToFit()
-        } else {
-            MoodFace(progress: progress, size: 190, color: MoodScale.accent(at: progress))
+        ZStack {
+            if let drawn = Art.mascot(mood) {
+                Image(uiImage: drawn)
+                    .resizable()
+                    .scaledToFit()
+            } else {
+                MoodFace(progress: progress, size: 190, color: MoodScale.accent(at: progress))
+            }
+
+            if let clip = Art.idle(mood) {
+                LoopingVideo(url: clip, isPlaying: settled)
+                    // The clip carries the glow baked into it, because it was
+                    // generated from a frame that had it. That glow came from
+                    // the same numbers the screen draws its own with, so the
+                    // two match — but only to the accuracy of an H.264 frame,
+                    // and a rectangle is unforgiving. The edges are faded out
+                    // so there is no rectangle to notice; the character's own
+                    // ink starts 51pt in, well clear of it.
+                    .mask { edgeFade }
+                    // ...and that baked glow is also why the clip is hidden
+                    // the moment the character is not standing still. The hop
+                    // scales and lifts everything inside this stack, and the
+                    // still can take that because it is transparent around the
+                    // character — the screen's own glow shows through it. The
+                    // clip cannot: its glow would be lifted and stretched with
+                    // it, and slide against the one behind.
+                    .opacity(settled ? 1 : 0)
+                    .allowsHitTesting(false)
+            }
         }
+    }
+
+    /// Standing still on a mood, with no thumb on the bar: the only state in
+    /// which the idle clip is shown.
+    ///
+    /// The release spring is still running for a moment after a thumb lifts,
+    /// and `progress` is not quite on a mood yet, so this waits for it. It
+    /// costs nothing to wait: frame 0 of the clip is the still, so whichever
+    /// of the two is on screen, the pixels are the same.
+    private var settled: Bool {
+        !isDragging && abs(progress - progress.rounded()) < 0.01
+    }
+
+    /// Opaque through the middle, fading out over the last 30pt or so.
+    private var edgeFade: some View {
+        Rectangle()
+            .inset(by: 18)
+            .fill(.black)
+            .blur(radius: 10)
     }
 
     /// Low moods sit lower and heavier, high ones ride higher. A straight line

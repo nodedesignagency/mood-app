@@ -17,6 +17,15 @@ enum Art {
     /// A mood's mascot.
     static func mascot(_ mood: Mood) -> UIImage? { mascots[mood.id] }
 
+    /// A mood's idle clip, for the moods that have one. Silent, and with no
+    /// audio track at all, so playing it cannot duck or interrupt whatever
+    /// the phone is already playing.
+    ///
+    /// The clip's first frame *is* that mood's still — it was generated from
+    /// it — so starting, stopping and looping all land on the frame already
+    /// on screen, and a mood without a clip simply keeps the still.
+    static func idle(_ mood: Mood) -> URL? { idles[mood.id] }
+
     /// The sunburst behind the mascot — Figma's own render of "Star 2".
     static let rays = UIImage(named: "glow-rays")
 
@@ -24,6 +33,16 @@ enum Art {
     /// not load from a loose bundle file, so it ships rasterised at 3× with
     /// its 787878 already baked in — the same grey as the words beside it.
     static let hintSwipe = UIImage(named: "hint-swipe")
+
+    private static let idles: [Int: URL] = {
+        var found: [Int: URL] = [:]
+        for mood in MoodScale.all {
+            if let url = Bundle.main.url(forResource: mood.mascot, withExtension: "mp4") {
+                found[mood.id] = url
+            }
+        }
+        return found
+    }()
 
     private static let faces: [Int: (resting: UIImage, blue: UIImage)] = {
         var found: [Int: (resting: UIImage, blue: UIImage)] = [:]

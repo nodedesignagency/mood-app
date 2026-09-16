@@ -18,7 +18,7 @@ def oid(key):
 # the bundle instead, which is what makes Image("mood-okay") find them — a file
 # in the Sources phase would be handed to the compiler and fail the build.
 COMPILED = (".swift", ".metal")
-COPIED = (".png",)
+COPIED = (".png", ".mp4")
 
 files = sorted(
     str(p.relative_to(ROOT / "Sources")).replace("\\", "/")
@@ -34,7 +34,8 @@ def phase_of(f):
 
 def filetype(f):
     ext = os.path.splitext(f)[1].lower()
-    return {".metal": "sourcecode.metal", ".png": "image.png"}.get(ext, "sourcecode.swift")
+    return {".metal": "sourcecode.metal", ".png": "image.png",
+            ".mp4": "video.quicktime"}.get(ext, "sourcecode.swift")
 if not files:
     sys.exit("no Swift sources found under " + str(ROOT / "Sources"))
 

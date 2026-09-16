@@ -78,3 +78,31 @@ floor to within 3.1pt.
 If the set is ever re-exported, keep the lowest pixel of each drawing on a
 common row. `MoodMascot` also takes the feet from it: stretch and squash are
 anchored at 331 of the 392pt box, which is where that floor falls.
+
+## The idle clips
+
+`mascot-<key>.mp4` next to `mascot-<key>.png`, one per mood, and optional: a
+mood without one keeps its still and nothing else changes. Only Okay has one so
+far.
+
+They are generated from the still rather than drawn from nothing, which is the
+whole reason they hold the character: the clip's **first frame is the app's own
+rendering of that mood** — page, glow, rays and mascot, at the numbers in
+`FigmaTokens` — and the same frame is given as both the start and the end
+keyframe, which is what makes the loop seamless. Measured on the Okay clip:
+the last frame differs from the first by 1.01/255 on average, the feet do not
+move at all across the five seconds, and the colour does not drift.
+
+Rules for any new one:
+
+- Silent, and with **no audio track at all** — not a muted one — so playing it
+  cannot duck or interrupt whatever the phone is already playing.
+- 1176px square: 3× the 392pt box, which is as much as any iPhone can show.
+- The feet stay on the floor, the character stays in its box, the camera never
+  moves, and nothing new enters the frame.
+- The glow is baked in, so the clip is only shown while the character is
+  standing still. The hop would otherwise stretch that baked glow against the
+  live one behind it.
+- Awful, Low, Good and Great sit a little above or below where their still
+  sits, by `MoodMascot`'s posture. Bake that offset into the first frame when
+  generating those four, or their glow will sit a few points off.

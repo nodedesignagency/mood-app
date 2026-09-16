@@ -143,7 +143,7 @@ struct MoodCheckInView: View {
     /// The mascot. How one mood's drawing becomes the next is `MoodMascot`'s
     /// business; the screen supplies the position and the curve.
     private var mascot: some View {
-        MoodMascot(progress: progress)
+        MoodMascot(progress: progress, isDragging: isDragging)
             .animation(MoodMotion.follow(isDragging), value: progress)
     }
 
