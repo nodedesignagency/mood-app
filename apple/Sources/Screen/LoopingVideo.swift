@@ -15,23 +15,19 @@ import SwiftUI
 /// changed, every arrival paid for an `AVPlayerItem`, the asset being opened
 /// and a looper being wired up before the first frame could run.
 struct LoopingVideo: UIViewRepresentable {
-    /// The clip to loop, or nil for a mood that has none.
+    /// The clip to loop, or nil for a mood that has none. It runs whenever
+    /// there is one: there is no separate "playing" to get wrong, and
+    /// something already rolling has nothing to start.
     let url: URL?
-    /// False while a thumb is on the bar.
-    var isPlaying: Bool
 
     func makeUIView(context: Context) -> PlayerView {
         let view = PlayerView()
-        view.load(url)
-        view.setPlaying(isPlaying)
+        view.show(url)
         return view
     }
 
     func updateUIView(_ view: PlayerView, context: Context) {
-        // Both, and in this order: a clip that has just been swapped in has to
-        // be loaded before it can be asked to play.
-        view.load(url)
-        view.setPlaying(isPlaying)
+        view.show(url)
     }
 
     static func dismantleUIView(_ view: PlayerView, coordinator: ()) {
@@ -65,26 +61,29 @@ struct LoopingVideo: UIViewRepresentable {
         @available(*, unavailable)
         required init?(coder: NSCoder) { fatalError("not from a nib") }
 
-        /// Load a clip, or nothing. Loading the clip already loaded does
-        /// nothing at all, which is what keeps arriving on a mood cheap.
-        func load(_ url: URL?) {
-            guard url != loaded else { return }
-            loaded = url
-            looper?.disableLooping()
-            looper = nil
-            queue.removeAllItems()
-            guard let url else { return }
-            looper = AVPlayerLooper(player: queue, templateItem: AVPlayerItem(url: url))
-        }
-
-        func setPlaying(_ shouldPlay: Bool) {
-            let wanted = shouldPlay && loaded != nil
-            guard wanted != playing else { return }
-            playing = wanted
-            // No seek back to the start on the way out. The clip is hidden
-            // before it is paused, so where it rests is not on screen, and a
-            // loop picked up where it left off is a loop either way.
-            wanted ? queue.play() : queue.pause()
+        /// Run this mood's clip, or hold.
+        ///
+        /// A mood with no clip pauses what is loaded rather than unloading
+        /// it. Dragging off a mood and coming back to it is the common move
+        /// on this screen, and tearing the item down means rebuilding it on
+        /// the way back — the delay this whole file exists to avoid. Loading
+        /// the clip that is already loaded does nothing at all.
+        ///
+        /// Nothing seeks back to the start, either. The clip is hidden before
+        /// it is held, so where it rests is not on screen, and a loop picked
+        /// up where it left off is still a loop.
+        func show(_ url: URL?) {
+            guard let url else {
+                if playing { queue.pause(); playing = false }
+                return
+            }
+            if url != loaded {
+                loaded = url
+                looper?.disableLooping()
+                queue.removeAllItems()
+                looper = AVPlayerLooper(player: queue, templateItem: AVPlayerItem(url: url))
+            }
+            if !playing { queue.play(); playing = true }
         }
 
         func stop() {

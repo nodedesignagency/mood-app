@@ -46,8 +46,11 @@ struct MoodMascot: View, Animatable {
     private static let apexBlur: CGFloat = 2.5
     /// How much lower the character sits at Awful than at Great.
     private static let posture: CGFloat = 7
-    /// The last fraction of a hop, across which the idle clip fades in.
-    private static let clipFadeIn = 0.25
+    /// The last part of a hop, across which the idle clip fades in. Half of
+    /// it: the glow the clip carries is a gradient blurred at 82pt, so
+    /// sliding it a few points against the one behind is not something the
+    /// eye has an edge to catch it by, and arriving early matters more.
+    private static let clipFadeIn = 0.5
 
     /// Where the feet are, as a fraction of the mascot's 392pt box.
     ///
@@ -89,6 +92,7 @@ struct MoodMascot: View, Animatable {
     @ViewBuilder
     private var art: some View {
         let mood = MoodScale.nearest(to: progress)
+        let clip = Art.idle(mood)
         ZStack {
             if let drawn = Art.mascot(mood) {
                 Image(uiImage: drawn)
@@ -101,7 +105,7 @@ struct MoodMascot: View, Animatable {
             // Always here, even for the four moods that have no clip yet:
             // taking it out of the tree and putting it back is what made the
             // character slow to come alive. See `LoopingVideo`.
-            LoopingVideo(url: Art.idle(mood), isPlaying: !isDragging)
+            LoopingVideo(url: clip)
                 // The clip carries the glow baked into it, because it was
                 // generated from a frame that had it. That glow came from the
                 // same numbers the screen draws its own with, so the two
@@ -110,13 +114,16 @@ struct MoodMascot: View, Animatable {
                 // is no rectangle to notice; the character's own ink starts
                 // 51pt in, well clear of it.
                 .mask { edgeFade }
-                .opacity(clipOpacity)
+                // A mood with no clip of its own shows none: the player holds
+                // the last one it loaded, ready for the way back, and this is
+                // what keeps it from being seen under the wrong mood.
+                .opacity(clip == nil ? 0 : clipOpacity)
                 .allowsHitTesting(false)
         }
     }
 
     /// How much of the idle clip is showing: none while a thumb is down, and
-    /// fading in over the last quarter of the character's landing.
+    /// fading in across the second half of the character's landing.
     ///
     /// This used to wait for the release spring to have properly finished —
     /// `progress` within 0.01 of a mood — and that is a long time to wait. The
@@ -130,14 +137,18 @@ struct MoodMascot: View, Animatable {
     /// everything in that stack — the still can take that, because it is
     /// transparent around the character and the screen's own glow shows
     /// through it, but the clip's glow would slide against the one behind.
-    /// That only matters while the hop is big. By the time the character is
-    /// within a quarter of its last hop the lift is under 2.5pt and the
-    /// stretch is a fifth of a percent, so the clip fades in across exactly
-    /// that, arriving as the character lands rather than after it.
+    /// That only matters while the hop is big, and by half way down it is
+    /// not: 11.3pt of lift and 2.8% of stretch at the point the clip starts
+    /// to appear, 6.1pt and 0.9% by the time it is half way in, and both at
+    /// zero as it reaches full. A gradient blurred at 82pt slid by six points
+    /// gives the eye no edge to catch it by, which is the whole reason this
+    /// can start early. It arrives as the character lands rather than after
+    /// it has finished landing.
     ///
-    /// The clip is already playing by then: that is `isPlaying`, which goes
-    /// true the moment the thumb lifts, so none of this is waiting on a
-    /// player to start.
+    /// The clip is already running by then, and was running throughout the
+    /// drag: `LoopingVideo` plays whenever it has something to play and only
+    /// holds for a mood with no clip at all. So none of this is ever waiting
+    /// on a player to start — it is only deciding when to show one.
     private var clipOpacity: Double {
         guard !isDragging else { return 0 }
         let flight = min(1, abs(progress - progress.rounded()) * 2)
